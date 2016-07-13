@@ -1,0 +1,33 @@
+body{
+	margin: 0px;
+}
+.color_btn{
+    float: left;
+    margin: 2px 3px 8px 0;
+    border:5px solid white;
+    width:40px;
+    height:40px;
+    border-radius: 5px 5px;
+    cursor:pointer;
+}
+.color_btn:hover{
+    border: 5px solid violet;
+}
+.color_btn_selected{
+    border: 5px solid blueviolet;
+}
+#black_btn{
+    background-color: black;
+}
+#blue_btn{
+    background-color: blue;
+}
+#green_btn{
+    background-color: green;
+}
+#red_btn{
+    background-color: red;
+}
+#yellow_btn{
+    background-color: yellow;
+}
