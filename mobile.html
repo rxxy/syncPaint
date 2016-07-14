@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	
+
 	<meta name="viewport"
           content=" height = device-height,
                     width = device-width,
@@ -10,7 +10,7 @@
                     minimum-scale = 1.0,
                     maximum-scale = 1.0,
                     user-scalable = no"/>
-					
+
 	<title>二进制手绘板</title>
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 	<link rel="stylesheet" type="text/css" href="css/style.css">
@@ -23,7 +23,7 @@
 <div class="container-fluid">
 	<!-- 绘图板 -->
 	<div class="row" id="myCanvasDiv">
-		<canvas id="myCanvas" style="border:1px solid #eee"></canvas>			
+		<canvas id="myCanvas" style="border:1px solid #eee"></canvas>
 	</div>
 	<!-- 按钮组 -->
 	<div class="btn-group btn-group-lg" role="group" aria-label="...">
@@ -34,7 +34,7 @@ glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
 	    <button type="button" class="btn btn-default" id="empty"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>
 
 		<!-- 颜色按钮 -->
-		<button type="button" data-trigger="focus" class="btn btn-default" id="color" 
+		<button type="button" data-trigger="focus" class="btn btn-default" id="color"
 		data-container="body" data-toggle="popover" data-placement="top" data-content='
 		<div id="black_btn" class="color_btn"></div>
 			<div id="blue_btn" class="color_btn"></div>
@@ -43,8 +43,8 @@ glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
 			<div id="yellow_btn" class="color_btn"></div>'>
 			<span class="glyphicon glyphicon-text-color" aria-hidden="true"></span>
 		</button>
-	    
-		<button type="button" data-trigger="focus" class="btn btn-default" 
+
+		<button type="button" data-trigger="focus" class="btn btn-default"
 		data-container="body" data-toggle="popover" data-placement="top" id="shape" data-content='<div id="shapeGroup">
 		    <button type="button" class="btn btn-default  active" shape="pen">画笔</button>
 		    <button type="button" class="btn btn-default" shape="rect">矩形</button>
@@ -53,7 +53,7 @@ glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
 		    <button type="button" class="btn btn-default" shape="line">直线</button>
 		</div>'>形状</button>
 		<!-- fds 此功能没有实现
-		<button type="button" data-trigger="focus" class="btn btn-default" 
+		<button type="button" data-trigger="focus" class="btn btn-default"
 		data-container="body" data-toggle="popover" data-placement="top" id="width" data-content='<div id="widthGroup">
 		    <button type="button" class="btn btn-default active" width="10">画笔</button>
 		    <button type="button" class="btn btn-default" width="15">矩形</button>
@@ -66,6 +66,5 @@ glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
 </div>
 
 <script src="js/mobile.js"></script>
-
 </body>
 </html>
