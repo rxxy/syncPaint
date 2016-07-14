@@ -345,8 +345,6 @@ $("#color").click(function() {
         }
     )
 });
-
-
 $("#shapeGroup").hide();
 $("#shape").click(function() {
     //$("#color")..popover('hide');
