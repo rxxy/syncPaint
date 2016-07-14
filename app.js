@@ -128,7 +128,7 @@ function pushImgToPc(data, token) {
 			pcList[i].socket.emit('imgPush', data);
 		}
 	}
-	console.log('pushImgToPc end');
+	//console.log('pushImgToPc end');
 }
 
 
