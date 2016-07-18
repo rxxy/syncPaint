@@ -27,7 +27,11 @@ app.get('/client',
         res.send('url错误，您是怎么进来的呢');
     }
 );
-
+app.get('/:path',
+    function(req, res) {
+        res.sendfile(__dirname + '/' + req.params.path);
+    }
+);
 //所有已连接的pc端socket对象
 var pcList = new Array();
 //所有已连接的移动端socket对象
@@ -81,11 +85,10 @@ io.on('connection', function(socket) {
         var token = data.token;
         for (i in mobileList) {
             if (token == mobileList[i].token) { //找到与手机端匹配的PC端
-                console.log("img:" + data.imgData);
+                //console.log("img:" + data.imgData);
                 mobileList[i].socket.emit('positionChange', data.imgData);
             }
         }
-
     });
 
 });

@@ -1,6 +1,6 @@
 //调整canvas的大小
 $("#myCanvas").attr("width", $(window).width());
-$("#myCanvas").attr("height", $(window).height() - 58);
+$("#myCanvas").attr("height", $(window).height() - 43);
 //一堆全局变量
 var offset = $("#myCanvasDiv").offset();
 var canvasWidth;
@@ -260,7 +260,7 @@ socket.on('positionChange', function(imgData) {
     //cxt.beginPath();
     img.onload = function() {
         cxt.putImageData(historyCanvas[0], 0, 0);
-        console.log(imgData.left + '--' + imgData.top + '--' + imgData.width + '--' + imgData.height);
+        //console.log(imgData.left + '--' + imgData.top + '--' + imgData.width + '--' + imgData.height);
         cxt.drawImage(img, 0, 0);
         historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
     }
@@ -269,7 +269,7 @@ socket.on('positionChange', function(imgData) {
 
 //图像发生改变，推送图像
 function imageChange(type, data) {
-    console.log('imageChange');
+    //console.log('imageChange');
     if (type == null) {
         pointObj.point = currentPoint;
         socket.emit('imageChange', {
@@ -322,17 +322,25 @@ function getQueryString(name) {
     if (r != null) return unescape(r[2]);
     return null;
 }
-//初始化弹出框
-$(function() {
-    $('[data-toggle="popover"]').popover({
-        html: true,
-        viewport: {
-            selector: 'body',
-            padding: 0
-        }
-    });
-})
-$("#color").click(function() {
+//点击canvas事件，调出菜单栏
+// $("#myCanvas").bind('click', function(e) {
+//   alert('点击了');
+// });
+
+//颜色按钮
+$('#color_content').hide();
+$('#color').popover({
+  content:function(){
+    return $('#color_content').html();
+  },
+  html: true,
+  placement:'top',
+  trigger:'focus',
+  viewport: {
+      selector: 'body',
+      padding: 0
+  }
+}).click(function() {
     $(this).popover('show');
     //颜色选择效果
     $(".color_btn").click(
@@ -345,8 +353,20 @@ $("#color").click(function() {
         }
     )
 });
-$("#shapeGroup").hide();
-$("#shape").click(function() {
+//形状按钮
+$('#shape_content').hide();
+$('#shape').popover({
+  content:function(){
+    return $('#shape_content').html();
+  },
+  html: true,
+  placement:'top',
+  trigger:'focus',
+  viewport: {
+      selector: 'body',
+      padding: 0
+  }
+}).click(function() {
     //$("#color")..popover('hide');
     $(this).popover('show');
     //选择有shape属性的元素来绑定事件
@@ -355,9 +375,13 @@ $("#shape").click(function() {
         $("[shape]").removeClass('active');
         var shape = $(this).attr('shape');
         $("[shape=" + shape + "]").addClass('active');
+        //重新绑定手指移动事件
         eventRebind($(this).attr('shape'));
+        //设置形状按钮为对应形状
+        $('#shape>img').attr('src',$("[shape=" + shape + "]>img").attr('src'));
     });
     //$("#shapeGroup").css("float":"left");
     //$("#shapeGroup")animate({left:'250px'});
-
 });
+
+//$("#shapeGroup").hide();

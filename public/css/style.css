@@ -3,7 +3,7 @@ body{
 }
 .color_btn{
     float: left;
-    margin: 2px 3px 8px 0;
+    margin: 2px 0px 8px 0px;
     border:5px solid white;
     width:40px;
     height:40px;
@@ -30,4 +30,13 @@ body{
 }
 #yellow_btn{
     background-color: yellow;
+}
+
+.btn-group button{
+	width: 40px;
+}
+/*显示的形状小图标*/
+.shapeImg{
+	width: 16px;
+	height: 16px;
 }

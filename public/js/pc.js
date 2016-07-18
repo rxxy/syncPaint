@@ -256,16 +256,16 @@ $('#selectRect').mousedown(function(event) {
     isDown = true;
     pre_x = event.pageX;
     pre_y = event.pageY;
-    console.log('down');
+    //console.log('down');
 });
 $('#selectRect').mouseup(function() {
     isDown = false;
     positionChange();
-    console.log('up');
+    //console.log('up');
 });
 $('#selectRect').mouseout(function() {
     isDown = false;
-    console.log('out');
+    //console.log('out');
 });
 $('#selectRect').mousemove(function(event) {
     if (isDown) {
