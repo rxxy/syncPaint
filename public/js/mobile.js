@@ -7,6 +7,8 @@ var canvasWidth;
 var canvasHeight;
 var c;
 var cxt;
+//画笔粗细
+var lineWidth = 5;
 //存放历史的绘图数据，方便撤销和恢复/存放历史的绘图数据，方便撤销和恢复
 var historyCanvas;
 //当前画线点的坐标，pc移动同步就靠他了
@@ -18,18 +20,23 @@ var initX;
 var initY;
 //当前画布数据在historyCanvas的下标
 var current = 0;
+//上次画线时间（计算画笔速度）
+var lastTimestamp = 0;
+//上次画笔的粗细（这个画笔粗细只在选择pen形状时局部使用）
+var lastLineWidth = -1;
+var lastLoc;
 //初始化画笔(主要是那些全局变量)
-
 function init() {
     canvasWidth = parseInt($("#myCanvas").attr('width'));
     canvasHeight = parseInt($("#myCanvas").attr('height'));
     c = document.getElementById("myCanvas");
     //获取一支画笔
     cxt = c.getContext("2d");
-    //线条宽度
-    cxt.lineWidth = 5;
+    //初始化画笔粗细
+    cxt.lineWidth = lineWidth;
     //给线条2头戴帽子，使线条更平滑
     cxt.lineCap = "round";
+    cxt.lineJoin = "round"
     //线条颜色(貌似用英文表示颜色的时候苹果下的浏览器才会画出来线条)
     cxt.strokeStyle = 'black';
     historyCanvas = new Array();
@@ -37,14 +44,16 @@ function init() {
     //当前画布数据在historyCanvas的下标
     current = 0;
     //默认使用画笔
-    eventRebind('pen');
+    eventRebind('pencil');
 }
-init();
+
 //--------------------------------------------------------添加事件监听----------------------------------------------------------
 //统一事件监听，提高代码可复用，减少重复代码 由各个形状按钮触发
 function eventRebind(shape) {
     //隐藏点击形状出来那个弹出框
     $("#shape").popover('hide');
+    //若上一次绑定的是pen形状，则需要同步绘图环境（主要是画笔粗细）
+    drawPenChange();
     $("#myCanvas").unbind();
     //移动端touch事件
     $("#myCanvas").bind('touchstart', function(e) {
@@ -57,6 +66,7 @@ function eventRebind(shape) {
         pointObj = new Object();
         pointObj.type = shape;
         drawStart(initX, initY);
+        lastLoc = {x:initX,y:initY};
     });
     $("#myCanvas").bind('touchend', function(e) {
         historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
@@ -65,9 +75,10 @@ function eventRebind(shape) {
         while (current < historyCanvas.length - 1) {
             historyCanvas.pop();
         }
+        cxt.lineWidth = lineWidth;
     });
     //根据参数绑定对应的事件
-    if (shape === 'pen') {
+    if (shape === 'pencil') {
         $("#myCanvas").bind('touchmove', function(e) {
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -173,14 +184,62 @@ function eventRebind(shape) {
             e.returnValue = false;
             return false;
         });
+    } else if (shape === 'pen') {
+        $("#myCanvas").bind('touchmove', function(e) {
+            var touch = e.originalEvent.changedTouches[0];
+            var x = touch.clientX - offset.left;
+            var y = touch.clientY - offset.top;
+            //console.log('x:'+x+',y:'+y);
+            cxt.beginPath();
+            cxt.moveTo( lastLoc.x , lastLoc.y );
+            cxt.lineTo(x, y);
+            cxt.stroke();
+            var curTimestamp = new Date().getTime();
+            var s = calcDistance( {x:x,y:y} , lastLoc )
+            var t = curTimestamp - lastTimestamp
+            cxt.lineWidth = calcLineWidth( t , s );
+            currentPoint = {
+                x: x,
+                y: y,
+                lineWidth:cxt.lineWidth
+            };
+            imageChange();
+            lastLoc = {x:x,y:y};
+            lastTimestamp = curTimestamp
+            lastLineWidth = cxt.lineWidth;
+            //禁止手指滑动时屏幕跟着滚动
+            e.returnValue = false;
+            return false;
+        });
     } else {
         //不修改代码是不会到这里滴...
         console.log('程序奔溃……-_-||  呜呜...');
     }
 }
+var maxLineWidth = 30;
+var minLineWidth = 1;
+var maxStrokeV = 2;
+var minStrokeV = 0.1;
+//计算当前速度的画笔粗细
+function calcLineWidth( t , s ){
+    var v = s / t;
+    var resultLineWidth;
+    if( v <= minStrokeV )
+        resultLineWidth = maxLineWidth;
+    else if ( v >= maxStrokeV )
+        resultLineWidth = minLineWidth;
+    else{
+        resultLineWidth = maxLineWidth - (v-minStrokeV)/(maxStrokeV-minStrokeV)*(maxLineWidth-minLineWidth);
+    }
+    if( lastLineWidth == -1 )
+        return resultLineWidth;
 
-
-
+    return resultLineWidth*3/20 + lastLineWidth*17/20;
+}
+//计算2点之间距离（pen类型画笔计算粗细用）
+function calcDistance( loc1 , loc2 ){
+    return Math.sqrt( (loc1.x - loc2.x)*(loc1.x - loc2.x) + (loc1.y - loc2.y)*(loc1.y - loc2.y) )
+}
 
 function revoke() {
     console.log('撤销');
@@ -249,7 +308,7 @@ socket.on('connect', function(sockets) {
             'token': token,
             'screen': screen
         });
-        //初始化绘图环境
+        //初始化绘图环境(同步PC端绘图环境)
         drawPenChange();
     }
 });
@@ -336,6 +395,7 @@ $('#color').popover({
   html: true,
   placement:'top',
   trigger:'focus',
+  container:'#containerDiv',
   viewport: {
       selector: 'body',
       padding: 0
@@ -362,6 +422,7 @@ $('#shape').popover({
   html: true,
   placement:'top',
   trigger:'focus',
+  container:'#containerDiv',
   viewport: {
       selector: 'body',
       padding: 0
@@ -383,5 +444,5 @@ $('#shape').popover({
     //$("#shapeGroup").css("float":"left");
     //$("#shapeGroup")animate({left:'250px'});
 });
-
+init();
 //$("#shapeGroup").hide();

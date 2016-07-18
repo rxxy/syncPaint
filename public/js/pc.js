@@ -22,6 +22,9 @@ var p_top = 0;
 var c = document.getElementById("myCanvas");
 //获取一支画笔
 var cxt = c.getContext("2d");
+//给线条2头戴帽子，使线条更平滑
+cxt.lineCap = "round";
+cxt.lineJoin = "round"
 var emtpyData = cxt.getImageData(0, 0, c.width, c.height);
 //存放历史的绘图数据，方便撤销和恢复/存放历史的绘图数据，方便撤销和恢复
 var historyCanvas;
@@ -99,12 +102,20 @@ currentImg = emtpyData;
 socket.on('imgPush', function(data) { //服务器发来图像数据
     var point = data.point;
     //cxt.beginPath();
-    if (data.type === 'pen') {
+    if (data.type === 'pencil') {
         cxt.lineTo(p_left + initX, p_top + initY);
         initX = point.x;
         initY = point.y;
         cxt.stroke();
-    } else if (data.type === 'rect') {
+    } else if (data.type === 'pen') {
+        cxt.lineWidth = point.lineWidth;
+        cxt.beginPath();
+        cxt.moveTo(initX,initY);
+        cxt.lineTo(p_left + point.x, p_top + point.y);
+        initX = point.x;
+        initY = point.y;
+        cxt.stroke();
+    }else if (data.type === 'rect') {
         cxt.beginPath();
         cxt.putImageData(historyCanvas[current].data, 0, 0);
         cxt.strokeRect(p_left + point.left, p_top + point.top, point.x, point.y);
