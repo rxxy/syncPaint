@@ -25,6 +25,8 @@ var lastTimestamp = 0;
 //上次画笔的粗细（这个画笔粗细只在选择pen形状时局部使用）
 var lastLineWidth = -1;
 var lastLoc;
+//记录用户是否画线了，如点击一下屏幕就不会画线，主要为了区分点击时不作为一次画线记录
+var isDraw = false;
 //初始化画笔(主要是那些全局变量)
 function init() {
     canvasWidth = parseInt($("#myCanvas").attr('width'));
@@ -37,7 +39,7 @@ function init() {
     //给线条2头戴帽子，使线条更平滑
     cxt.lineCap = "round";
     cxt.lineJoin = "round"
-    //线条颜色(貌似用英文表示颜色的时候苹果下的浏览器才会画出来线条)
+        //线条颜色(貌似用英文表示颜色的时候苹果下的浏览器才会画出来线条)
     cxt.strokeStyle = 'black';
     historyCanvas = new Array();
     historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
@@ -54,7 +56,7 @@ function eventRebind(shape) {
     $("#shape").popover('hide');
     //若上一次绑定的是pen形状，则需要同步绘图环境（主要是画笔粗细）
     drawPenChange();
-    $("#myCanvas").unbind();
+    $("#myCanvas").unbind('touchstart touchend touchmove');
     //移动端touch事件
     $("#myCanvas").bind('touchstart', function(e) {
         cxt.beginPath();
@@ -66,20 +68,27 @@ function eventRebind(shape) {
         pointObj = new Object();
         pointObj.type = shape;
         drawStart(initX, initY);
-        lastLoc = {x:initX,y:initY};
+        lastLoc = {
+            x: initX,
+            y: initY
+        };
     });
     $("#myCanvas").bind('touchend', function(e) {
-        historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
-        drawEnd();
-        //只要画了一点，就不能前进了，所以要把后边的图像清空
-        while (current < historyCanvas.length - 1) {
+        if(isDraw){
+          historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+          drawEnd();
+          //只要画了一点，就不能前进了，所以要把后边的图像清空
+          while (current < historyCanvas.length - 1) {
             historyCanvas.pop();
+          }
+          cxt.lineWidth = lineWidth;
+          isDraw = false;
         }
-        cxt.lineWidth = lineWidth;
     });
     //根据参数绑定对应的事件
     if (shape === 'pencil') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
@@ -97,6 +106,7 @@ function eventRebind(shape) {
         });
     } else if (shape === 'rect') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -116,6 +126,7 @@ function eventRebind(shape) {
         });
     } else if (shape === 'circle') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -138,6 +149,7 @@ function eventRebind(shape) {
         });
     } else if (shape === 'triangle') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -166,6 +178,7 @@ function eventRebind(shape) {
         });
     } else if (shape === 'line') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -186,25 +199,32 @@ function eventRebind(shape) {
         });
     } else if (shape === 'pen') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
             //console.log('x:'+x+',y:'+y);
             cxt.beginPath();
-            cxt.moveTo( lastLoc.x , lastLoc.y );
+            cxt.moveTo(lastLoc.x, lastLoc.y);
             cxt.lineTo(x, y);
             cxt.stroke();
             var curTimestamp = new Date().getTime();
-            var s = calcDistance( {x:x,y:y} , lastLoc )
+            var s = calcDistance({
+                x: x,
+                y: y
+            }, lastLoc)
             var t = curTimestamp - lastTimestamp
-            cxt.lineWidth = calcLineWidth( t , s );
+            cxt.lineWidth = calcLineWidth(t, s);
             currentPoint = {
                 x: x,
                 y: y,
-                lineWidth:cxt.lineWidth
+                lineWidth: cxt.lineWidth
             };
             imageChange();
-            lastLoc = {x:x,y:y};
+            lastLoc = {
+                x: x,
+                y: y
+            };
             lastTimestamp = curTimestamp
             lastLineWidth = cxt.lineWidth;
             //禁止手指滑动时屏幕跟着滚动
@@ -221,24 +241,24 @@ var minLineWidth = 1;
 var maxStrokeV = 2;
 var minStrokeV = 0.1;
 //计算当前速度的画笔粗细
-function calcLineWidth( t , s ){
+function calcLineWidth(t, s) {
     var v = s / t;
     var resultLineWidth;
-    if( v <= minStrokeV )
+    if (v <= minStrokeV)
         resultLineWidth = maxLineWidth;
-    else if ( v >= maxStrokeV )
+    else if (v >= maxStrokeV)
         resultLineWidth = minLineWidth;
-    else{
-        resultLineWidth = maxLineWidth - (v-minStrokeV)/(maxStrokeV-minStrokeV)*(maxLineWidth-minLineWidth);
+    else {
+        resultLineWidth = maxLineWidth - (v - minStrokeV) / (maxStrokeV - minStrokeV) * (maxLineWidth - minLineWidth);
     }
-    if( lastLineWidth == -1 )
+    if (lastLineWidth == -1)
         return resultLineWidth;
 
-    return resultLineWidth*3/20 + lastLineWidth*17/20;
+    return resultLineWidth * 3 / 20 + lastLineWidth * 17 / 20;
 }
 //计算2点之间距离（pen类型画笔计算粗细用）
-function calcDistance( loc1 , loc2 ){
-    return Math.sqrt( (loc1.x - loc2.x)*(loc1.x - loc2.x) + (loc1.y - loc2.y)*(loc1.y - loc2.y) )
+function calcDistance(loc1, loc2) {
+    return Math.sqrt((loc1.x - loc2.x) * (loc1.x - loc2.x) + (loc1.y - loc2.y) * (loc1.y - loc2.y))
 }
 
 function revoke() {
@@ -295,6 +315,7 @@ $("#recovery").click(function() {
 var token = getQueryString('token');
 //socket连接
 var socket = io().connect("http://" + window.location.host);
+init();
 socket.on('connect', function(sockets) {
     var screen = new Object();
     var data = c.toDataURL("image/png");
@@ -389,17 +410,17 @@ function getQueryString(name) {
 //颜色按钮
 $('#color_content').hide();
 $('#color').popover({
-  content:function(){
-    return $('#color_content').html();
-  },
-  html: true,
-  placement:'top',
-  trigger:'focus',
-  container:'#containerDiv',
-  viewport: {
-      selector: 'body',
-      padding: 0
-  }
+    content: function() {
+        return $('#color_content').html();
+    },
+    html: true,
+    placement: 'top',
+    trigger: 'focus',
+    container: '#containerDiv',
+    viewport: {
+        selector: 'body',
+        padding: 0
+    }
 }).click(function() {
     $(this).popover('show');
     //颜色选择效果
@@ -416,17 +437,17 @@ $('#color').popover({
 //形状按钮
 $('#shape_content').hide();
 $('#shape').popover({
-  content:function(){
-    return $('#shape_content').html();
-  },
-  html: true,
-  placement:'top',
-  trigger:'focus',
-  container:'#containerDiv',
-  viewport: {
-      selector: 'body',
-      padding: 0
-  }
+    content: function() {
+        return $('#shape_content').html();
+    },
+    html: true,
+    placement: 'top',
+    trigger: 'focus',
+    container: '#containerDiv',
+    viewport: {
+        selector: 'body',
+        padding: 0
+    }
 }).click(function() {
     //$("#color")..popover('hide');
     $(this).popover('show');
@@ -439,10 +460,47 @@ $('#shape').popover({
         //重新绑定手指移动事件
         eventRebind($(this).attr('shape'));
         //设置形状按钮为对应形状
-        $('#shape>img').attr('src',$("[shape=" + shape + "]>img").attr('src'));
+        $('#shape>img').attr('src', $("[shape=" + shape + "]>img").attr('src'));
     });
-    //$("#shapeGroup").css("float":"left");
-    //$("#shapeGroup")animate({left:'250px'});
 });
-init();
-//$("#shapeGroup").hide();
+
+
+$('#line_width_content').hide();
+$('#line_width').popover({
+    content: function() {
+        return $('#line_width_content').html();
+    },
+    html: true,
+    placement: 'top',
+    trigger: 'focus',
+    container: 'body',
+    viewport: {
+        selector: 'body',
+        padding: 0
+    }
+}).click(function() {
+    $(this).popover('show');
+    console.log(lineWidth);
+    //线宽按钮
+    $('.nstSlider').nstSlider({
+        "left_grip_selector": ".leftGrip",
+        "value_changed_callback": function(cause, leftValue) {
+            if(cause === 'drag_move'){
+              lineWidth = leftValue;
+              cxt.lineWidth = leftValue;
+              drawPenChange();
+              console.log(cause + '--lineWidth:' + lineWidth);
+            }
+        }
+    });
+    //线宽滑动条初始化
+    $('.nstSlider').nstSlider('set_position', lineWidth);
+});
+
+//点击画板隐藏所有弹出框
+$("#myCanvas").bind('click', function(e) {
+  console.log('click');
+  $('#line_width').popover('hide');
+  $('#shape').popover('hide');
+  $('#color').popover('hide');
+});
