@@ -6,6 +6,7 @@ var pre_y;
 var initX;
 var initY;
 //canvas的大小
+$('#myCanvasDiv').css('width',screen.width);
 var canvasWidth = $('#myCanvasDiv').css('width');
 var canvasHeight = $('#myCanvasDiv').css('height');
 canvasWidth = canvasWidth.substring(0, canvasWidth.length - 2);
@@ -123,6 +124,18 @@ socket.on('imgPush', function(data) { //服务器发来图像数据
         cxt.beginPath();
         cxt.putImageData(historyCanvas[current].data, 0, 0);
         cxt.arc(p_left + point.x, p_top + point.y, point.r, 0, 2 * Math.PI);
+        cxt.stroke();
+    } else if (data.type === 'ellipse') {
+        var a = point.a,b=point.b,x=point.x + p_left,y=point.y + p_top,ox=point.ox + p_left,oy=point.oy + p_top;
+        cxt.beginPath();
+        cxt.putImageData(historyCanvas[current].data, 0, 0);
+        //从椭圆的左端点开始顺时针绘制四条三次贝塞尔曲线
+        cxt.moveTo(x - a, y);
+        cxt.bezierCurveTo(x - a, y - oy, x - ox, y - b, x, y - b);
+        cxt.bezierCurveTo(x + ox, y - b, x + a, y - oy, x + a, y);
+        cxt.bezierCurveTo(x + a, y + oy, x + ox, y + b, x, y + b);
+        cxt.bezierCurveTo(x - ox, y + b, x - a, y + oy, x - a, y);
+        cxt.closePath();
         cxt.stroke();
     } else if (data.type === 'triangle') {
         cxt.beginPath();
