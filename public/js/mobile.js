@@ -8,7 +8,7 @@ var canvasHeight;
 var c;
 var cxt;
 //画笔粗细
-var lineWidth = 5;
+var lineWidth = 10;
 //存放历史的绘图数据，方便撤销和恢复/存放历史的绘图数据，方便撤销和恢复
 var historyCanvas;
 //当前画线点的坐标，pc移动同步就靠他了
@@ -38,7 +38,7 @@ function init() {
     cxt.lineWidth = lineWidth;
     //给线条2头戴帽子，使线条更平滑
     cxt.lineCap = "round";
-    cxt.lineJoin = "round"
+    cxt.lineJoin = "round";
         //线条颜色(貌似用英文表示颜色的时候苹果下的浏览器才会画出来线条)
     cxt.strokeStyle = 'black';
     historyCanvas = new Array();
@@ -236,7 +236,7 @@ function eventRebind(shape) {
         console.log('程序奔溃……-_-||  呜呜...');
     }
 }
-var maxLineWidth = 30;
+var maxLineWidth = lineWidth;
 var minLineWidth = 1;
 var maxStrokeV = 2;
 var minStrokeV = 0.1;
@@ -489,7 +489,7 @@ $('#line_width').popover({
               lineWidth = leftValue;
               cxt.lineWidth = leftValue;
               drawPenChange();
-              console.log(cause + '--lineWidth:' + lineWidth);
+              maxLineWidth = leftValue + 10;
             }
         }
     });
