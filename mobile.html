@@ -21,7 +21,7 @@
 
 <body>
 	<!-- 弹出框的container，高度为0，是看不见的，left为负数的目的是让弹出的内容在一行显示 -->
-<div id="containerDiv" style="width:3000px;float:left;position:absolute;left:-1000px"></div>
+<div id="containerDiv" style="width:4000px;float:left;position:absolute;left:-3000px"></div>
 
 	<div class="container-fluid">
 		<!-- 绘图板 -->
@@ -54,7 +54,7 @@
 			<a type="button" role="button" tabindex="0" class="btn btn-default" id="shape"><img src="images/pencil.png" class="shapeImg"/></a>
 			<!-- 点击上面的按钮弹出来的内容 -->
 			<div id="shape_content">
-				<div id="shapeGroup">
+				<div id="shapeGroup" style="width:200px">
 				    <button type="button" class="btn btn-default  active" shape="pencil"><img src="images/pencil.png" class="shapeImg"/></button>
 						<button type="button" class="btn btn-default" shape="pen"><img src="images/pen.png" class="shapeImg"/></button>
 						<button type="button" class="btn btn-default" shape="rect"><img src="images/rectangle.png" class="shapeImg"/></button>

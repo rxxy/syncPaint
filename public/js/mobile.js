@@ -1,14 +1,44 @@
-//调整canvas的大小
-$("#myCanvas").attr("width", $(window).width());
-$("#myCanvas").attr("height", $(window).height() - 43);
+
+//调整屏幕（横屏竖屏切换）
+function setFrame(type){
+    //调整canvas的大小
+    $("#myCanvas").attr("width", $(window).width());
+    $("#myCanvas").attr("height", $(window).height() - 43);
+    offset = $("#myCanvasDiv").offset();
+    //告诉PC端设置屏幕显示方式
+    if (socket != null) {
+        console.log('socket 不为null');
+        var data = c.toDataURL("image/png");
+        var img = new Image();
+        img.src = data;
+        img.onload = function() {
+            socket.emit('viewChange', {
+              'role': 'mobile',
+              'screen': {'width': img.width, 'height': img.height},
+              'type': type,
+              'token': token
+            });
+        }
+
+    }else {
+      console.log('socket 为null');
+    }
+}
+
+
 //一堆全局变量
-var offset = $("#myCanvasDiv").offset();
+var offset;
+setFrame('vertical');
 var canvasWidth;
 var canvasHeight;
 var c;
 var cxt;
+//PC和移动端缩放倍数
+var scale = 1;
 //画笔粗细
 var lineWidth = 10;
+//画笔颜色
+var lineColor = 'black'
 //存放历史的绘图数据，方便撤销和恢复/存放历史的绘图数据，方便撤销和恢复
 var historyCanvas;
 //当前画线点的坐标，pc移动同步就靠他了
@@ -24,11 +54,10 @@ var current = 0;
 var lastTimestamp = 0;
 //上次画笔的粗细（这个画笔粗细只在选择pen形状时局部使用）
 var lastLineWidth = -1;
-var lastLoc;
 //记录用户是否画线了，如点击一下屏幕就不会画线，主要为了区分点击时不作为一次画线记录
 var isDraw = false;
 //初始化画笔(主要是那些全局变量)
-function init() {
+function init(type) {
     canvasWidth = parseInt($("#myCanvas").attr('width'));
     canvasHeight = parseInt($("#myCanvas").attr('height'));
     c = document.getElementById("myCanvas");
@@ -40,13 +69,16 @@ function init() {
     cxt.lineCap = "round";
     cxt.lineJoin = "round";
     //线条颜色(貌似用英文表示颜色的时候苹果下的浏览器才会画出来线条)
-    cxt.strokeStyle = 'black';
-    historyCanvas = new Array();
-    historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
-    //当前画布数据在historyCanvas的下标
-    current = 0;
-    //默认使用画笔
-    eventRebind('pencil');
+    cxt.strokeStyle = lineColor;
+    //如果是第一次调用，初始化历史画板数据，设置默认绘图方式
+    if (type === 'init') {
+        historyCanvas = new Array();
+        historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+        //当前画布数据在historyCanvas的下标
+        current = 0;
+        //默认使用画笔
+        eventRebind('pencil');
+    }
 }
 
 //--------------------------------------------------------添加事件监听----------------------------------------------------------
@@ -56,7 +88,14 @@ function eventRebind(shape) {
     $("#shape").popover('hide');
     //若上一次绑定的是pen形状，则需要同步绘图环境（主要是画笔粗细）
     drawPenChange();
-    $("#myCanvas").unbind('touchstart touchend touchmove');
+    $("#myCanvas").unbind();
+    //点击画板隐藏所有弹出框
+    $("#myCanvas").bind('click', function(e) {
+        console.log('click');
+        $('#line_width').popover('hide');
+        $('#shape').popover('hide');
+        $('#color').popover('hide');
+    });
     //移动端touch事件
     $("#myCanvas").bind('touchstart', function(e) {
         cxt.beginPath();
@@ -68,10 +107,6 @@ function eventRebind(shape) {
         pointObj = new Object();
         pointObj.type = shape;
         drawStart(initX, initY);
-        lastLoc = {
-            x: initX,
-            y: initY
-        };
     });
     $("#myCanvas").bind('touchend', function(e) {
         if (isDraw) {
@@ -209,11 +244,14 @@ function eventRebind(shape) {
             var s = calcDistance({
                 x: x,
                 y: y
-            }, lastLoc)
+            }, {
+              x: initX,
+              y: initY
+            })
             var t = curTimestamp - lastTimestamp
             cxt.lineWidth = calcLineWidth(t, s);
             cxt.beginPath();
-            cxt.moveTo(lastLoc.x, lastLoc.y);
+            cxt.moveTo(initX, initY);
             cxt.lineTo(x, y);
             cxt.stroke();
             currentPoint = {
@@ -222,10 +260,8 @@ function eventRebind(shape) {
                 lineWidth: cxt.lineWidth
             };
             imageChange();
-            lastLoc = {
-                x: x,
-                y: y
-            };
+            initX = x;
+            initY = y;
             lastTimestamp = curTimestamp
             lastLineWidth = cxt.lineWidth;
             //禁止手指滑动时屏幕跟着滚动
@@ -334,11 +370,6 @@ function empty() {
 
 
 //按钮事件
-//颜色选择器
-$("#color").change(function() {
-    var color = $("#color").val();
-    cxt.strokeStyle = color;
-});
 $('#empty').click(function() {
     empty();
 });
@@ -355,9 +386,15 @@ $("#recovery").click(function() {
 var token = getQueryString('token');
 //socket连接
 var socket = io().connect("http://" + window.location.host);
-init();
+init('init');
 socket.on('connect', function(sockets) {
     var screen = new Object();
+    if (window.orientation == 180 || window.orientation == 0) {
+        screen.viewType = 'vertical';
+    }
+    if (window.orientation == 90 || window.orientation == -90) {
+        screen.viewType = 'cross';
+    }
     var data = c.toDataURL("image/png");
     var img = new Image();
     img.src = data;
@@ -369,8 +406,6 @@ socket.on('connect', function(sockets) {
             'token': token,
             'screen': screen
         });
-        //初始化绘图环境(同步PC端绘图环境)
-        drawPenChange();
     }
 });
 //电脑端选定区域发生改变
@@ -385,6 +420,31 @@ socket.on('positionChange', function(imgData) {
         historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
     }
 
+});
+//切换横竖屏后要显示的数据
+socket.on('viewChange', function(data) {
+    if (data.type === 'vertical') {
+        lineWidth = lineWidth * scale;
+    }else if (data.type === 'cross') {
+        var img = new Image();
+        img.src = data.imgData;
+        // img.width = 568;
+        // img.height = 320;
+        //cxt.beginPath();
+        img.onload = function() {
+          cxt.putImageData(historyCanvas[0], 0, 0);
+          //console.log(imgData.left + '--' + imgData.top + '--' + imgData.width + '--' + imgData.height);
+          cxt.drawImage(img, 0, 0,img.width ,img.height , 0, 0, img.width/data.scale,img.height/data.scale);
+          //cxt.putImageData(historyCanvas[current], 0, 0, 0, 0,$("#myCanvas").attr("width"), $("#myCanvas").attr("height"));
+        }
+        scale = data.scale;
+        lineWidth = lineWidth/data.scale;
+    }
+
+
+    //只还原绘图环境
+    init('drawEnv');
+    drawPenChange();
 });
 
 //图像发生改变，推送图像
@@ -468,7 +528,7 @@ $('#color').popover({
         function(e) {
             $(".color_btn").removeClass("color_btn_selected");
             $(this).addClass("color_btn_selected");
-            cxt.strokeStyle = $(this).css("background-color");
+            lineColor = cxt.strokeStyle = $(this).css("background-color");
             drawPenChange();
             $("#color").popover('hide');
         }
@@ -536,20 +596,14 @@ $('#line_width').popover({
     //线宽滑动条初始化
     $('.nstSlider').nstSlider('set_position', lineWidth);
 });
-
-//点击画板隐藏所有弹出框
-$("#myCanvas").bind('click', function(e) {
-    console.log('click');
-    $('#line_width').popover('hide');
-    $('#shape').popover('hide');
-    $('#color').popover('hide');
-});
 //横竖屏的切换
-window.addEventListener('orientationchange', function(event) {
+$(window).bind('orientationchange',function(e){
     if (window.orientation == 180 || window.orientation == 0) {
         alert("竖屏");
+        setFrame('vertical');
     }
     if (window.orientation == 90 || window.orientation == -90) {
         alert("横屏");
+        setFrame('cross');
     }
 });
