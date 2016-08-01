@@ -254,6 +254,47 @@ socket.on('drawPenChange', function(cxtObj) {
 
     console.log('drawPenChangecxt');
 });
+<<<<<<< HEAD
+=======
+//移动端横竖屏切换
+socket.on('viewChange', function(data) {
+    console.log('横竖屏切换');
+    //移动端屏幕信息
+    mobileInfo.screen = data.screen;
+    mobileInfo.screen.viewType = data.type;
+    //移动端与PC端的宽高比
+    var xScale = canvasWidth/mobileInfo.screen.width;
+    var yScale = canvasHeight/mobileInfo.screen.height;
+    mobileInfo.scale = xScale > yScale?yScale:xScale;
+    if (data.type === 'cross') {//横屏
+        var img = new Image();
+        var imgData = c.toDataURL("image/png");
+        socket.emit('viewChange', {
+            'role': 'pc',
+            'token': token,
+            'type': data.type,
+            'imgData': imgData,
+            'scale': mobileInfo.scale
+        });
+        //隐藏选择区域
+        $('#selectRect').hide();
+        console.log('横屏');
+    }else if (data.type === 'vertical') {//竖屏
+        console.log('竖屏');
+        mobileInfo.scale = 1;
+        socket.emit('viewChange', {
+            'role': 'pc',
+            'token': token,
+            'type': data.type,
+            'scale': mobileInfo.scale
+        });
+        $('#selectRect').show();
+        positionChange();
+    }
+
+
+});
+>>>>>>> 0983402285018e614a686df63aac33cdb107122b
 
 //矩形区域位置改变
 function positionChange() {
