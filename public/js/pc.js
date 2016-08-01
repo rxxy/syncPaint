@@ -6,6 +6,7 @@ var pre_y;
 var initX;
 var initY;
 //canvas的大小
+$('#myCanvasDiv').css('width',screen.width);
 var canvasWidth = $('#myCanvasDiv').css('width');
 var canvasHeight = $('#myCanvasDiv').css('height');
 canvasWidth = canvasWidth.substring(0, canvasWidth.length - 2);
@@ -13,6 +14,14 @@ canvasHeight = canvasHeight.substring(0, canvasHeight.length - 2);
 //设置当前画布的大小，和电脑一样大-_-||
 $('#myCanvas').attr('width', canvasWidth);
 $('#myCanvas').attr('height', canvasHeight);
+/*
+移动端的各种信息
+screen.viewType(横屏(cross)或竖屏(vertical))
+screen.width，screen.height(屏幕宽高)
+*/
+var mobileInfo = new Object();
+//默认不缩放
+mobileInfo.scale = 1;
 //选择区域矩形的长宽
 var rectWidth;
 var rectHeight;
@@ -82,6 +91,7 @@ socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的�
     //cxt.scale(canvasWidth/screen.width,canvasHeight/screen.height);
     $('#selectRect').css("width", screen.width);
     $('#selectRect').css("height", screen.height);
+    mobileInfo.screen = screen;
     //创建一个选定区域矩形大小的canvas，方便矩形移动时向移动端传输数据
     rectCanvas = document.createElement('canvas');
     //canvas.id = "CursorLayer";
@@ -102,27 +112,65 @@ currentImg = emtpyData;
 socket.on('imgPush', function(data) { //服务器发来图像数据
     var point = data.point;
     //cxt.beginPath();
+
     if (data.type === 'pencil') {
-        cxt.lineTo(p_left + initX, p_top + initY);
+        cxt.beginPath();
+        if (mobileInfo.screen.viewType === 'cross') {
+            cxt.moveTo(initX*mobileInfo.scale,initY*mobileInfo.scale);
+            cxt.lineTo(point.x*mobileInfo.scale, point.y*mobileInfo.scale);
+        }else if (mobileInfo.screen.viewType === 'vertical') {
+            cxt.moveTo(p_left + initX,p_top + initY);
+            cxt.lineTo(p_left + point.x, p_top + point.y);
+        }
         initX = point.x;
         initY = point.y;
         cxt.stroke();
     } else if (data.type === 'pen') {
         cxt.lineWidth = point.lineWidth;
         cxt.beginPath();
-        cxt.moveTo(initX,initY);
-        cxt.lineTo(p_left + point.x, p_top + point.y);
+        if (mobileInfo.screen.viewType === 'cross') {
+            cxt.moveTo(initX*mobileInfo.scale,initY*mobileInfo.scale);
+            cxt.lineTo(point.x*mobileInfo.scale, point.y*mobileInfo.scale);
+        }else if (mobileInfo.screen.viewType === 'vertical') {
+            cxt.moveTo(p_left + initX,p_top + initY);
+            cxt.lineTo(p_left + point.x, p_top + point.y);
+        }
         initX = point.x;
         initY = point.y;
         cxt.stroke();
     }else if (data.type === 'rect') {
         cxt.beginPath();
         cxt.putImageData(historyCanvas[current].data, 0, 0);
-        cxt.strokeRect(p_left + point.left, p_top + point.top, point.x, point.y);
+        if (mobileInfo.screen.viewType === 'cross') {
+            cxt.strokeRect(point.left*mobileInfo.scale, point.top*mobileInfo.scale, point.x*mobileInfo.scale, point.y*mobileInfo.scale);
+        }else if (mobileInfo.screen.viewType === 'vertical') {
+            cxt.strokeRect(p_left + point.left, p_top + point.top, point.x, point.y);
+        }
     } else if (data.type === 'circle') {
         cxt.beginPath();
         cxt.putImageData(historyCanvas[current].data, 0, 0);
-        cxt.arc(p_left + point.x, p_top + point.y, point.r, 0, 2 * Math.PI);
+        if (mobileInfo.screen.viewType === 'cross') {
+            cxt.arc(point.x*mobileInfo.scale, point.y*mobileInfo.scale, point.r*mobileInfo.scale, 0, 2 * Math.PI);
+        }else if (mobileInfo.screen.viewType === 'vertical') {
+            cxt.arc(p_left + point.x, p_top + point.y, point.r, 0, 2 * Math.PI);
+        }
+        cxt.stroke();
+    } else if (data.type === 'ellipse') {
+        var k = .5522848
+        if (mobileInfo.screen.viewType === 'cross') {
+            var a = point.a*mobileInfo.scale,b=point.b*mobileInfo.scale,x=point.x*mobileInfo.scale,y=point.y*mobileInfo.scale,ox=a*k,oy=b*k;
+        }else if (mobileInfo.screen.viewType === 'vertical'){
+            var a = point.a,b=point.b,x=point.x + p_left,y=point.y + p_top,ox=point.ox,oy=point.oy;
+        }
+        cxt.beginPath();
+        cxt.putImageData(historyCanvas[current].data, 0, 0);
+        //从椭圆的左端点开始顺时针绘制四条三次贝塞尔曲线
+        cxt.moveTo(x - a, y);
+        cxt.bezierCurveTo(x - a, y - oy, x - ox, y - b, x, y - b);
+        cxt.bezierCurveTo(x + ox, y - b, x + a, y - oy, x + a, y);
+        cxt.bezierCurveTo(x + a, y + oy, x + ox, y + b, x, y + b);
+        cxt.bezierCurveTo(x - ox, y + b, x - a, y + oy, x - a, y);
+        cxt.closePath();
         cxt.stroke();
     } else if (data.type === 'triangle') {
         cxt.beginPath();
@@ -182,7 +230,6 @@ socket.on('imgPush', function(data) { //服务器发来图像数据
 });
 //接受起始点坐标
 socket.on('drawStart', function(point) {
-    cxt.beginPath();
     initX = point.x;
     initY = point.y;
     console.log('drawStart');
@@ -203,12 +250,14 @@ socket.on('drawEnd', function(point) {
 //画布环境发生改变
 socket.on('drawPenChange', function(cxtObj) {
     cxt.strokeStyle = cxtObj.strokeStyle;
-    cxt.lineWidth = cxtObj.lineWidth;
+    cxt.lineWidth = cxtObj.lineWidth * mobileInfo.scale;
+
     console.log('drawPenChangecxt');
 });
+
 //矩形区域位置改变
 function positionChange() {
-    //现在小画板画出来
+    //先在小画板画出来
     var img = new Image();
     img.src = c.toDataURL("image/png");
     var cxt2 = rectCanvas.getContext('2d');

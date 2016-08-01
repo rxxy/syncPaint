@@ -50,7 +50,7 @@ io.on('connection', function(socket) {
                 'socket': socket,
                 'token': token
             });
-            io.emit('makecode', token);
+            socket.emit('makecode', token);
             console.log('token:' + token);
         } else if (role === 'Client') {
             mobileList.push({
@@ -90,7 +90,6 @@ io.on('connection', function(socket) {
             }
         }
     });
-
 });
 //推送移动端端的信息给PC端
 function pushInfoToPc(data, token) {

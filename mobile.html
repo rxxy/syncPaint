@@ -11,15 +11,17 @@
                     user-scalable = no" />
 	<title>二进制手绘板</title>
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="css/jquery.nstSlider.min.css">
 	<link rel="stylesheet" type="text/css" href="css/style.css">
 	<script src="js/jquery.min.js"></script>
+	<script src="js/jquery.nstSlider.min.js"></script>
 	<script src="js/bootstrap.js"></script>
 	<script src="js/socket.io-1.2.0.js"></script>
 </head>
 
 <body>
 	<!-- 弹出框的container，高度为0，是看不见的，left为负数的目的是让弹出的内容在一行显示 -->
-<div id="containerDiv" style="width:3000px;float:left;position:absolute;left:-1000px"></div>
+<div id="containerDiv" style="width:4000px;float:left;position:absolute;left:-3000px"></div>
 
 	<div class="container-fluid">
 		<!-- 绘图板 -->
@@ -29,7 +31,7 @@
 	</div>
 
 	<!-- 按钮组 -->
- <div class="btn-group" role="group" style="width: 200px;margin: 0 auto;display: block;" id="control">
+ <div class="btn-group" role="group" style="width: 250px;margin: 0 auto;display: block;" id="control">
 
 			<button type="button" class="btn btn-default" id="revoke"><span class="
 	glyphicon glyphicon-chevron-left" aria-hidden="true"></span></button>
@@ -52,16 +54,24 @@
 			<a type="button" role="button" tabindex="0" class="btn btn-default" id="shape"><img src="images/pencil.png" class="shapeImg"/></a>
 			<!-- 点击上面的按钮弹出来的内容 -->
 			<div id="shape_content">
-				<div id="shapeGroup">
+				<div id="shapeGroup" style="width:200px">
 				    <button type="button" class="btn btn-default  active" shape="pencil"><img src="images/pencil.png" class="shapeImg"/></button>
 						<button type="button" class="btn btn-default" shape="pen"><img src="images/pen.png" class="shapeImg"/></button>
 						<button type="button" class="btn btn-default" shape="rect"><img src="images/rectangle.png" class="shapeImg"/></button>
 				    <button type="button" class="btn btn-default" shape="triangle"><img src="images/triangle.png" class="shapeImg"/></button>
 				    <button type="button" class="btn btn-default" shape="circle"><img src="images/circle.png" class="shapeImg"/></button>
 				    <button type="button" class="btn btn-default" shape="line"><img src="images/line.png" class="shapeImg"/></button>
+						<button type="button" class="btn btn-default" shape="ellipse"><img src="images/ellipse.png" class="shapeImg"/></button>
 				</div>
 			</div>
-
+			<a type="button" role="button" tabindex="0" class="btn btn-default" id="line_width"><img src="images/line_width.png" class="shapeImg"/></a>
+			<!-- 点击上面的按钮弹出来的内容 -->
+			<div id="line_width_content">
+				<div class="nstSlider" style="width:150px" data-range_min="1" data-range_max="30"
+										 data-cur_min="0">
+							<div class="leftGrip"></div>
+				</div>
+			</div>
 	</div>
 
 	<script src="js/mobile.js"></script>

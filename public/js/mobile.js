@@ -1,14 +1,18 @@
+
 //调整canvas的大小
 $("#myCanvas").attr("width", $(window).width());
 $("#myCanvas").attr("height", $(window).height() - 43);
-//一堆全局变量
 var offset = $("#myCanvasDiv").offset();
+
+//一堆全局变量
 var canvasWidth;
 var canvasHeight;
 var c;
 var cxt;
-//画笔粗细
-var lineWidth = 5;
+//画笔粗细 cxt的画笔粗细和颜色可能会在绘图过程中发生变化，所以这里有全局变量
+var lineWidth = 10;
+//画笔颜色
+var lineColor = 'black'
 //存放历史的绘图数据，方便撤销和恢复/存放历史的绘图数据，方便撤销和恢复
 var historyCanvas;
 //当前画线点的坐标，pc移动同步就靠他了
@@ -18,15 +22,18 @@ var pointObj;
 //绘制图形时第一次按下点的坐标
 var initX;
 var initY;
+//上一次点的坐标，花线用
+var lastPoint = {};
 //当前画布数据在historyCanvas的下标
 var current = 0;
 //上次画线时间（计算画笔速度）
 var lastTimestamp = 0;
 //上次画笔的粗细（这个画笔粗细只在选择pen形状时局部使用）
 var lastLineWidth = -1;
-var lastLoc;
+//记录用户是否画线了，如点击一下屏幕就不会画线，主要为了区分点击时不作为一次画线记录
+var isDraw = false;
 //初始化画笔(主要是那些全局变量)
-function init() {
+function init(type) {
     canvasWidth = parseInt($("#myCanvas").attr('width'));
     canvasHeight = parseInt($("#myCanvas").attr('height'));
     c = document.getElementById("myCanvas");
@@ -36,15 +43,18 @@ function init() {
     cxt.lineWidth = lineWidth;
     //给线条2头戴帽子，使线条更平滑
     cxt.lineCap = "round";
-    cxt.lineJoin = "round"
+    cxt.lineJoin = "round";
     //线条颜色(貌似用英文表示颜色的时候苹果下的浏览器才会画出来线条)
-    cxt.strokeStyle = 'black';
-    historyCanvas = new Array();
-    historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
-    //当前画布数据在historyCanvas的下标
-    current = 0;
-    //默认使用画笔
-    eventRebind('pencil');
+    cxt.strokeStyle = lineColor;
+    //如果是第一次调用，初始化历史画板数据，设置默认绘图方式
+    if (type === 'init') {
+        historyCanvas = new Array();
+        historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+        //当前画布数据在historyCanvas的下标
+        current = 0;
+        //默认使用画笔
+        eventRebind('pencil');
+    }
 }
 
 //--------------------------------------------------------添加事件监听----------------------------------------------------------
@@ -55,36 +65,54 @@ function eventRebind(shape) {
     //若上一次绑定的是pen形状，则需要同步绘图环境（主要是画笔粗细）
     drawPenChange();
     $("#myCanvas").unbind();
+    //点击画板隐藏所有弹出框
+    $("#myCanvas").bind('click', function(e) {
+        console.log('click');
+        $('#line_width').popover('hide');
+        $('#shape').popover('hide');
+        $('#color').popover('hide');
+    });
     //移动端touch事件
     $("#myCanvas").bind('touchstart', function(e) {
         cxt.beginPath();
         var touch = e.originalEvent.changedTouches[0];
         initX = touch.clientX - offset.left;
         initY = touch.clientY - offset.top;
-        cxt.moveTo(initX, initY);
+        lastPoint.x = initX;
+        lastPoint.y = initY;
         currentPoint = new Object();
         pointObj = new Object();
         pointObj.type = shape;
         drawStart(initX, initY);
-        lastLoc = {x:initX,y:initY};
     });
     $("#myCanvas").bind('touchend', function(e) {
-        historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
-        drawEnd();
-        //只要画了一点，就不能前进了，所以要把后边的图像清空
-        while (current < historyCanvas.length - 1) {
-            historyCanvas.pop();
+        if (isDraw) {
+            historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+            drawEnd();
+            //只要画了一点，就不能前进了，所以要把后边的图像清空
+            while (current < historyCanvas.length - 1) {
+                historyCanvas.pop();
+            }
+            cxt.lineWidth = lineWidth;
+            isDraw = false;
         }
-        cxt.lineWidth = lineWidth;
     });
     //根据参数绑定对应的事件
     if (shape === 'pencil') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
+            cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
-            //console.log('x:'+x+',y:'+y);
+            // x += 0.5;
+            // y += 0.5;
+            console.log('x:'+x+',y:'+y);
+            cxt.moveTo(lastPoint.x,lastPoint.y);
             cxt.lineTo(x, y);
+            lastPoint.x = x;
+            lastPoint.y = y;
+            cxt.closePath();
             cxt.stroke();
             currentPoint = {
                 x: x,
@@ -97,6 +125,7 @@ function eventRebind(shape) {
         });
     } else if (shape === 'rect') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -116,6 +145,7 @@ function eventRebind(shape) {
         });
     } else if (shape === 'circle') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -138,6 +168,7 @@ function eventRebind(shape) {
         });
     } else if (shape === 'triangle') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -166,6 +197,7 @@ function eventRebind(shape) {
         });
     } else if (shape === 'line') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             cxt.beginPath();
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
@@ -186,27 +218,76 @@ function eventRebind(shape) {
         });
     } else if (shape === 'pen') {
         $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
             //console.log('x:'+x+',y:'+y);
-            cxt.beginPath();
-            cxt.moveTo( lastLoc.x , lastLoc.y );
-            cxt.lineTo(x, y);
-            cxt.stroke();
+
             var curTimestamp = new Date().getTime();
-            var s = calcDistance( {x:x,y:y} , lastLoc )
+            var s = calcDistance({
+                x: x,
+                y: y
+            }, {
+              x: lastPoint.x,
+              y: lastPoint.y
+            })
             var t = curTimestamp - lastTimestamp
-            cxt.lineWidth = calcLineWidth( t , s );
+            cxt.lineWidth = calcLineWidth(t, s);
+            cxt.beginPath();
+            cxt.moveTo(lastPoint.x, lastPoint.y);
+            cxt.lineTo(x, y);
+            cxt.closePath();
+            cxt.stroke();
             currentPoint = {
                 x: x,
                 y: y,
-                lineWidth:cxt.lineWidth
+                lineWidth: cxt.lineWidth
             };
             imageChange();
-            lastLoc = {x:x,y:y};
+            lastPoint.x = x;
+            lastPoint.y = y;
             lastTimestamp = curTimestamp
             lastLineWidth = cxt.lineWidth;
+            //禁止手指滑动时屏幕跟着滚动
+            e.returnValue = false;
+            return false;
+        });
+    } else if (shape === 'ellipse') {
+        $("#myCanvas").bind('touchmove', function(e) {
+            isDraw = true;
+            var touch = e.originalEvent.changedTouches[0];
+            var x = touch.clientX - offset.left;
+            var y = touch.clientY - offset.top;
+            cxt.putImageData(historyCanvas[current], 0, 0);
+            var temp1 = x - initX;
+            var temp2 = y - initY;
+            var a = temp1 / 2;
+            var b = temp2 / 2;
+            x = temp1 / 2 + initX;
+            y = temp2 / 2 + initY;
+            //三次贝塞尔曲线法
+            var k = .5522848,
+                ox = a * k, // 水平控制点偏移量
+                oy = b * k; // 垂直控制点偏移量
+            cxt.beginPath();
+            //从椭圆的左端点开始顺时针绘制四条三次贝塞尔曲线
+            cxt.moveTo(x - a, y);
+            cxt.bezierCurveTo(x - a, y - oy, x - ox, y - b, x, y - b);
+            cxt.bezierCurveTo(x + ox, y - b, x + a, y - oy, x + a, y);
+            cxt.bezierCurveTo(x + a, y + oy, x + ox, y + b, x, y + b);
+            cxt.bezierCurveTo(x - ox, y + b, x - a, y + oy, x - a, y);
+            cxt.closePath();
+            cxt.stroke();
+            currentPoint = {
+                x: x,
+                y: y,
+                a: a,
+                b: b,
+                ox: ox,
+                oy: oy
+            };
+            imageChange();
             //禁止手指滑动时屏幕跟着滚动
             e.returnValue = false;
             return false;
@@ -216,29 +297,29 @@ function eventRebind(shape) {
         console.log('程序奔溃……-_-||  呜呜...');
     }
 }
-var maxLineWidth = 30;
+var maxLineWidth = lineWidth;
 var minLineWidth = 1;
 var maxStrokeV = 2;
 var minStrokeV = 0.1;
 //计算当前速度的画笔粗细
-function calcLineWidth( t , s ){
+function calcLineWidth(t, s) {
     var v = s / t;
     var resultLineWidth;
-    if( v <= minStrokeV )
+    if (v <= minStrokeV)
         resultLineWidth = maxLineWidth;
-    else if ( v >= maxStrokeV )
+    else if (v >= maxStrokeV)
         resultLineWidth = minLineWidth;
-    else{
-        resultLineWidth = maxLineWidth - (v-minStrokeV)/(maxStrokeV-minStrokeV)*(maxLineWidth-minLineWidth);
+    else {
+        resultLineWidth = maxLineWidth - (v - minStrokeV) / (maxStrokeV - minStrokeV) * (maxLineWidth - minLineWidth);
     }
-    if( lastLineWidth == -1 )
+    if (lastLineWidth == -1)
         return resultLineWidth;
 
-    return resultLineWidth*3/20 + lastLineWidth*17/20;
+    return resultLineWidth * 3 / 20 + lastLineWidth * 17 / 20;
 }
 //计算2点之间距离（pen类型画笔计算粗细用）
-function calcDistance( loc1 , loc2 ){
-    return Math.sqrt( (loc1.x - loc2.x)*(loc1.x - loc2.x) + (loc1.y - loc2.y)*(loc1.y - loc2.y) )
+function calcDistance(loc1, loc2) {
+    return Math.sqrt((loc1.x - loc2.x) * (loc1.x - loc2.x) + (loc1.y - loc2.y) * (loc1.y - loc2.y))
 }
 
 function revoke() {
@@ -274,11 +355,6 @@ function empty() {
 
 
 //按钮事件
-//颜色选择器
-$("#color").change(function() {
-    var color = $("#color").val();
-    cxt.strokeStyle = color;
-});
 $('#empty').click(function() {
     empty();
 });
@@ -295,8 +371,15 @@ $("#recovery").click(function() {
 var token = getQueryString('token');
 //socket连接
 var socket = io().connect("http://" + window.location.host);
+init('init');
 socket.on('connect', function(sockets) {
     var screen = new Object();
+    if (window.orientation == 180 || window.orientation == 0) {
+        screen.viewType = 'vertical';
+    }
+    if (window.orientation == 90 || window.orientation == -90) {
+        screen.viewType = 'cross';
+    }
     var data = c.toDataURL("image/png");
     var img = new Image();
     img.src = data;
@@ -308,8 +391,6 @@ socket.on('connect', function(sockets) {
             'token': token,
             'screen': screen
         });
-        //初始化绘图环境(同步PC端绘图环境)
-        drawPenChange();
     }
 });
 //电脑端选定区域发生改变
@@ -324,6 +405,31 @@ socket.on('positionChange', function(imgData) {
         historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
     }
 
+});
+//切换横竖屏后要显示的数据
+socket.on('viewChange', function(data) {
+    if (data.type === 'vertical') {
+        lineWidth = lineWidth * scale;
+    }else if (data.type === 'cross') {
+        var img = new Image();
+        img.src = data.imgData;
+        // img.width = 568;
+        // img.height = 320;
+        //cxt.beginPath();
+        img.onload = function() {
+          cxt.putImageData(historyCanvas[0], 0, 0);
+          //console.log(imgData.left + '--' + imgData.top + '--' + imgData.width + '--' + imgData.height);
+          cxt.drawImage(img, 0, 0,img.width ,img.height , 0, 0, img.width/data.scale,img.height/data.scale);
+          //cxt.putImageData(historyCanvas[current], 0, 0, 0, 0,$("#myCanvas").attr("width"), $("#myCanvas").attr("height"));
+        }
+        scale = data.scale;
+        lineWidth = lineWidth/data.scale;
+    }
+
+
+    //只还原绘图环境
+    init('drawEnv');
+    drawPenChange();
 });
 
 //图像发生改变，推送图像
@@ -389,17 +495,17 @@ function getQueryString(name) {
 //颜色按钮
 $('#color_content').hide();
 $('#color').popover({
-  content:function(){
-    return $('#color_content').html();
-  },
-  html: true,
-  placement:'top',
-  trigger:'focus',
-  container:'#containerDiv',
-  viewport: {
-      selector: 'body',
-      padding: 0
-  }
+    content: function() {
+        return $('#color_content').html();
+    },
+    html: true,
+    placement: 'top',
+    trigger: 'focus',
+    container: '#containerDiv',
+    viewport: {
+        selector: 'body',
+        padding: 0
+    }
 }).click(function() {
     $(this).popover('show');
     //颜色选择效果
@@ -407,7 +513,7 @@ $('#color').popover({
         function(e) {
             $(".color_btn").removeClass("color_btn_selected");
             $(this).addClass("color_btn_selected");
-            cxt.strokeStyle = $(this).css("background-color");
+            lineColor = cxt.strokeStyle = $(this).css("background-color");
             drawPenChange();
             $("#color").popover('hide');
         }
@@ -416,17 +522,17 @@ $('#color').popover({
 //形状按钮
 $('#shape_content').hide();
 $('#shape').popover({
-  content:function(){
-    return $('#shape_content').html();
-  },
-  html: true,
-  placement:'top',
-  trigger:'focus',
-  container:'#containerDiv',
-  viewport: {
-      selector: 'body',
-      padding: 0
-  }
+    content: function() {
+        return $('#shape_content').html();
+    },
+    html: true,
+    placement: 'top',
+    trigger: 'focus',
+    container: '#containerDiv',
+    viewport: {
+        selector: 'body',
+        padding: 0
+    }
 }).click(function() {
     //$("#color")..popover('hide');
     $(this).popover('show');
@@ -439,10 +545,39 @@ $('#shape').popover({
         //重新绑定手指移动事件
         eventRebind($(this).attr('shape'));
         //设置形状按钮为对应形状
-        $('#shape>img').attr('src',$("[shape=" + shape + "]>img").attr('src'));
+        $('#shape>img').attr('src', $("[shape=" + shape + "]>img").attr('src'));
     });
-    //$("#shapeGroup").css("float":"left");
-    //$("#shapeGroup")animate({left:'250px'});
 });
-init();
-//$("#shapeGroup").hide();
+
+
+$('#line_width_content').hide();
+$('#line_width').popover({
+    content: function() {
+        return $('#line_width_content').html();
+    },
+    html: true,
+    placement: 'top',
+    trigger: 'focus',
+    container: 'body',
+    viewport: {
+        selector: 'body',
+        padding: 0
+    }
+}).click(function() {
+    $(this).popover('show');
+    console.log(lineWidth);
+    //线宽按钮
+    $('.nstSlider').nstSlider({
+        "left_grip_selector": ".leftGrip",
+        "value_changed_callback": function(cause, leftValue) {
+            if (cause === 'drag_move') {
+                lineWidth = leftValue;
+                cxt.lineWidth = leftValue;
+                drawPenChange();
+                maxLineWidth = leftValue;
+            }
+        }
+    });
+    //线宽滑动条初始化
+    $('.nstSlider').nstSlider('set_position', lineWidth);
+});
