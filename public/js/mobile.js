@@ -1,54 +1,15 @@
 
-<<<<<<< HEAD
 //调整canvas的大小
 $("#myCanvas").attr("width", $(window).width());
 $("#myCanvas").attr("height", $(window).height() - 43);
 var offset = $("#myCanvasDiv").offset();
 
 //一堆全局变量
-=======
-//调整屏幕（横屏竖屏切换）
-function setFrame(type){
-    //调整canvas的大小
-    $("#myCanvas").attr("width", $(window).width());
-    $("#myCanvas").attr("height", $(window).height() - 43);
-    offset = $("#myCanvasDiv").offset();
-    //告诉PC端设置屏幕显示方式
-    if (socket != null) {
-        console.log('socket 不为null');
-        var data = c.toDataURL("image/png");
-        var img = new Image();
-        img.src = data;
-        img.onload = function() {
-            socket.emit('viewChange', {
-              'role': 'mobile',
-              'screen': {'width': img.width, 'height': img.height},
-              'type': type,
-              'token': token
-            });
-        }
-
-    }else {
-      console.log('socket 为null');
-    }
-}
-
-
-//一堆全局变量
-var offset;
-setFrame('vertical');
->>>>>>> 0983402285018e614a686df63aac33cdb107122b
 var canvasWidth;
 var canvasHeight;
 var c;
 var cxt;
-<<<<<<< HEAD
 //画笔粗细 cxt的画笔粗细和颜色可能会在绘图过程中发生变化，所以这里有全局变量
-=======
-//PC和移动端缩放倍数
-var scale = 1;
-//画笔粗细
->>>>>>> 0983402285018e614a686df63aac33cdb107122b
 var lineWidth = 10;
 //画笔颜色
 var lineColor = 'black'
@@ -140,10 +101,7 @@ function eventRebind(shape) {
     if (shape === 'pencil') {
         $("#myCanvas").bind('touchmove', function(e) {
             isDraw = true;
-<<<<<<< HEAD
             cxt.beginPath();
-=======
->>>>>>> 0983402285018e614a686df63aac33cdb107122b
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
@@ -271,22 +229,13 @@ function eventRebind(shape) {
                 x: x,
                 y: y
             }, {
-<<<<<<< HEAD
               x: lastPoint.x,
               y: lastPoint.y
-=======
-              x: initX,
-              y: initY
->>>>>>> 0983402285018e614a686df63aac33cdb107122b
             })
             var t = curTimestamp - lastTimestamp
             cxt.lineWidth = calcLineWidth(t, s);
             cxt.beginPath();
-<<<<<<< HEAD
             cxt.moveTo(lastPoint.x, lastPoint.y);
-=======
-            cxt.moveTo(initX, initY);
->>>>>>> 0983402285018e614a686df63aac33cdb107122b
             cxt.lineTo(x, y);
             cxt.closePath();
             cxt.stroke();
@@ -296,13 +245,8 @@ function eventRebind(shape) {
                 lineWidth: cxt.lineWidth
             };
             imageChange();
-<<<<<<< HEAD
             lastPoint.x = x;
             lastPoint.y = y;
-=======
-            initX = x;
-            initY = y;
->>>>>>> 0983402285018e614a686df63aac33cdb107122b
             lastTimestamp = curTimestamp
             lastLineWidth = cxt.lineWidth;
             //禁止手指滑动时屏幕跟着滚动
@@ -636,18 +580,4 @@ $('#line_width').popover({
     });
     //线宽滑动条初始化
     $('.nstSlider').nstSlider('set_position', lineWidth);
-<<<<<<< HEAD
-=======
-});
-//横竖屏的切换
-$(window).bind('orientationchange',function(e){
-    if (window.orientation == 180 || window.orientation == 0) {
-        alert("竖屏");
-        setFrame('vertical');
-    }
-    if (window.orientation == 90 || window.orientation == -90) {
-        alert("横屏");
-        setFrame('cross');
-    }
->>>>>>> 0983402285018e614a686df63aac33cdb107122b
 });

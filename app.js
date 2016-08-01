@@ -90,28 +90,6 @@ io.on('connection', function(socket) {
             }
         }
     });
-<<<<<<< HEAD
-=======
-    //移动端切换屏幕(横竖屏的切换，此处移动和PC使用同一个事件，使用role区分设备类型)
-    socket.on('viewChange', function(data) {
-        var token = data.token;
-        if (data.role === 'pc') {
-          for (i in mobileList) {
-              if (token == mobileList[i].token) { //找到与手机端匹配的PC端
-                  mobileList[i].socket.emit('viewChange', data);
-                  //console.log(data.imgData);
-              }
-          }
-        }else if (data.role === 'mobile') {
-          for (i in pcList) {
-              if (token == pcList[i].token) { //找到与手机端匹配的PC端
-                  pcList[i].socket.emit('viewChange', data);
-              }
-          }
-        }
-
-    });
->>>>>>> 0983402285018e614a686df63aac33cdb107122b
 });
 //推送移动端端的信息给PC端
 function pushInfoToPc(data, token) {
