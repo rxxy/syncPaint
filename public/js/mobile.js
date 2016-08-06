@@ -1,10 +1,27 @@
-
 //调整canvas的大小
 $("#myCanvas").attr("width", $(window).width());
 $("#myCanvas").attr("height", $(window).height() - 43);
 var offset = $("#myCanvasDiv").offset();
 
 //一堆全局变量
+//记录此移动设备一些信息deviceInfo.screen.type 横竖屏
+var deviceInfo = {
+    scale: {
+        x: 1,
+        y: 1
+    }, //PC和移动端缩放倍数
+    pcInfo: {
+      top: 0,
+      left: 0
+    },
+    mobileInfo: {
+        screen:{
+            width: 0,
+            height: 0,
+            type: getScreenType()
+        }
+    }
+};
 var canvasWidth;
 var canvasHeight;
 var c;
@@ -13,8 +30,11 @@ var cxt;
 var lineWidth = 10;
 //画笔颜色
 var lineColor = 'black'
-//存放历史的绘图数据，方便撤销和恢复/存放历史的绘图数据，方便撤销和恢复
+    //存放历史的绘图数据，方便撤销和恢复/存放历史的绘图数据，方便撤销和恢复
+    //格式：[{currentPoint}]
 var historyCanvas;
+//画完一次所有currentpoint集合
+var points;
 //当前画线点的坐标，pc移动同步就靠他了
 var currentPoint;
 //数据格式为[{type:'pen',points:[{0,0},{0,1}]},{{type:'rect',points:[{0,0},{0,1}]}],传输每次图像变化的点，points也就是currentPoint
@@ -22,10 +42,12 @@ var pointObj;
 //绘制图形时第一次按下点的坐标
 var initX;
 var initY;
+//上一次画板的数据
+var lastCanvasData;
 //上一次点的坐标，花线用
 var lastPoint = {};
 //当前画布数据在historyCanvas的下标
-var current = 0;
+var current = -1;
 //上次画线时间（计算画笔速度）
 var lastTimestamp = 0;
 //上次画笔的粗细（这个画笔粗细只在选择pen形状时局部使用）
@@ -34,6 +56,21 @@ var lastLineWidth = -1;
 var isDraw = false;
 //初始化画笔(主要是那些全局变量)
 function init(type) {
+    var long = $(window).width()>$(window).height()?$(window).width():$(window).height();
+    var short = $(window).width()<$(window).height()?$(window).width():$(window).height();
+    var a = long;
+    var b = short;
+    if (getScreenType() === 'cross') {
+        var t = a;
+        a = b;
+        b = t;
+    }
+    console.log("a:" + a + "--b:" + b  );
+    console.log("init----------------");
+    $('#myCanvasDiv').css("width",b);
+    $('#myCanvasDiv').css("height",a - 43);
+    $("#myCanvas").attr("width", b);
+    $("#myCanvas").attr("height", a - 43);
     canvasWidth = parseInt($("#myCanvas").attr('width'));
     canvasHeight = parseInt($("#myCanvas").attr('height'));
     c = document.getElementById("myCanvas");
@@ -49,9 +86,10 @@ function init(type) {
     //如果是第一次调用，初始化历史画板数据，设置默认绘图方式
     if (type === 'init') {
         historyCanvas = new Array();
-        historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+        lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
+        //historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
         //当前画布数据在historyCanvas的下标
-        current = 0;
+        current = -1;
         //默认使用画笔
         eventRebind('pencil');
     }
@@ -81,18 +119,44 @@ function eventRebind(shape) {
         lastPoint.x = initX;
         lastPoint.y = initY;
         currentPoint = new Object();
+        points = new Array();
         pointObj = new Object();
-        pointObj.type = shape;
-        drawStart(initX, initY);
+        pointObj.shape = shape;
+        // pointObj.color = cxt.strokeStyle;
+        // pointObj.startPoint = {
+        //     x: initX,
+        //     y: initY
+        // };
+        // pointObj.lineWidth = lineWidth;
+        drawStart(initX, initY, shape);
     });
     $("#myCanvas").bind('touchend', function(e) {
         if (isDraw) {
-            historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+            var startPoint = {
+                x: initX,
+              　y: initY
+            };
+            if (getScreenType() === 'vertical') {
+                startPoint = convertPoint('pencil',deviceInfo.pcInfo,deviceInfo.scale,startPoint);
+                for(var i=0;i < points.length;i++){
+                    //console.log('转换前：'+points[i].x +','+ points[i].y);
+                    points[i] = convertPoint(shape,deviceInfo.pcInfo,deviceInfo.scale,points[i]);
+                    //console.log('转换后：'+points[i].x + ',' + points[i].y);
+                }
+            }
+            historyCanvas[++current] = {
+                shape: shape,
+                color: cxt.strokeStyle,
+                startPoint: startPoint,
+                lineWidth: lineWidth,
+                points: points
+            };
             drawEnd();
             //只要画了一点，就不能前进了，所以要把后边的图像清空
-            while (current < historyCanvas.length - 1) {
-                historyCanvas.pop();
-            }
+            // while (current < historyCanvas.length - 1) {
+            //     historyCanvas.pop();
+            // }
+            lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
             cxt.lineWidth = lineWidth;
             isDraw = false;
         }
@@ -107,8 +171,7 @@ function eventRebind(shape) {
             var y = touch.clientY - offset.top;
             // x += 0.5;
             // y += 0.5;
-            console.log('x:'+x+',y:'+y);
-            cxt.moveTo(lastPoint.x,lastPoint.y);
+            cxt.moveTo(lastPoint.x, lastPoint.y);
             cxt.lineTo(x, y);
             lastPoint.x = x;
             lastPoint.y = y;
@@ -118,6 +181,7 @@ function eventRebind(shape) {
                 x: x,
                 y: y
             };
+            points.push(currentPoint);
             imageChange();
             //禁止手指滑动时屏幕跟着滚动
             e.returnValue = false;
@@ -130,7 +194,7 @@ function eventRebind(shape) {
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
-            cxt.putImageData(historyCanvas[current], 0, 0);
+            cxt.putImageData(lastCanvasData, 0, 0);
             cxt.strokeRect(initX, initY, x - initX, y - initY);
             currentPoint = {
                 left: initX,
@@ -138,6 +202,7 @@ function eventRebind(shape) {
                 x: x - initX,
                 y: y - initY
             };
+            points.push(currentPoint);
             imageChange();
             //禁止手指滑动时屏幕跟着滚动
             e.returnValue = false;
@@ -150,7 +215,7 @@ function eventRebind(shape) {
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
-            cxt.putImageData(historyCanvas[current], 0, 0);
+            cxt.putImageData(lastCanvasData, 0, 0);
             temp1 = x - initX;
             temp2 = y - initY;
             var r = Math.sqrt((temp1) * (temp1) + (temp2) * (temp2)) / 2;
@@ -161,6 +226,7 @@ function eventRebind(shape) {
                 y: (temp2) / 2 + initY,
                 r: r
             };
+            points.push(currentPoint);
             imageChange();
             //禁止手指滑动时屏幕跟着滚动
             e.returnValue = false;
@@ -173,7 +239,7 @@ function eventRebind(shape) {
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
-            cxt.putImageData(historyCanvas[current], 0, 0);
+            cxt.putImageData(lastCanvasData, 0, 0);
             temp = (x - initX) / 2 + initX;
             cxt.moveTo(initX, y);
             cxt.lineTo(x, y);
@@ -190,6 +256,7 @@ function eventRebind(shape) {
                 x3: temp,
                 y3: initY
             };
+            points.push(currentPoint);
             imageChange();
             //禁止手指滑动时屏幕跟着滚动
             e.returnValue = false;
@@ -202,7 +269,7 @@ function eventRebind(shape) {
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
-            cxt.putImageData(historyCanvas[current], 0, 0);
+            cxt.putImageData(lastCanvasData, 0, 0);
 
             cxt.moveTo(initX, initY);
             cxt.lineTo(x, y);
@@ -211,6 +278,7 @@ function eventRebind(shape) {
                 x: x,
                 y: y
             };
+            points.push(currentPoint);
             imageChange();
             //禁止手指滑动时屏幕跟着滚动
             e.returnValue = false;
@@ -229,8 +297,8 @@ function eventRebind(shape) {
                 x: x,
                 y: y
             }, {
-              x: lastPoint.x,
-              y: lastPoint.y
+                x: lastPoint.x,
+                y: lastPoint.y
             })
             var t = curTimestamp - lastTimestamp
             cxt.lineWidth = calcLineWidth(t, s);
@@ -244,6 +312,7 @@ function eventRebind(shape) {
                 y: y,
                 lineWidth: cxt.lineWidth
             };
+            points.push(currentPoint);
             imageChange();
             lastPoint.x = x;
             lastPoint.y = y;
@@ -259,7 +328,7 @@ function eventRebind(shape) {
             var touch = e.originalEvent.changedTouches[0];
             var x = touch.clientX - offset.left;
             var y = touch.clientY - offset.top;
-            cxt.putImageData(historyCanvas[current], 0, 0);
+            cxt.putImageData(lastCanvasData, 0, 0);
             var temp1 = x - initX;
             var temp2 = y - initY;
             var a = temp1 / 2;
@@ -287,6 +356,7 @@ function eventRebind(shape) {
                 ox: ox,
                 oy: oy
             };
+            points.push(currentPoint);
             imageChange();
             //禁止手指滑动时屏幕跟着滚动
             e.returnValue = false;
@@ -325,13 +395,20 @@ function calcDistance(loc1, loc2) {
 function revoke() {
     console.log('撤销');
     //判断有没有历史画布数据
-    if (current <= 0) {
+    if (current < 0) {
         alert('撤销完啦。');
         return;
     }
     current--;
+    if(getScreenType() === 'cross'){
+        cxt.clearRect(0, 0, canvasWidth, canvasHeight)
+        for(var i=0;i<=current;i++){
+            drawShape(cxt,historyCanvas[i]);
+        }
+        lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight)
+    }
     //加载历史画布数据
-    cxt.putImageData(historyCanvas[current], 0, 0);
+    //cxt.putImageData(historyCanvas[current], 0, 0);
     imageChange('revoke', {});
 }
 
@@ -340,15 +417,21 @@ function recovery() {
         alert("没有要恢复的数据啦");
         return;
     }
-    cxt.putImageData(historyCanvas[++current], 0, 0);
+    current++;
+    if (getScreenType() === 'cross') {
+        drawShape(cxt,historyCanvas[current]);
+    }
+    lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight)
     imageChange('recovery', {});
 }
 
 function empty() {
-    cxt.putImageData(historyCanvas[0], 0, 0);
+    cxt.clearRect(0, 0, canvasWidth, canvasHeight);
+    lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
+        //cxt.putImageData(historyCanvas[0], 0, 0);
     historyCanvas = new Array();
-    historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
-    current = 0;
+    //  historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+    current = -1;
     imageChange('empty', {});
 }
 
@@ -374,64 +457,42 @@ var socket = io().connect("http://" + window.location.host);
 init('init');
 socket.on('connect', function(sockets) {
     var screen = new Object();
-    if (window.orientation == 180 || window.orientation == 0) {
-        screen.viewType = 'vertical';
-    }
-    if (window.orientation == 90 || window.orientation == -90) {
-        screen.viewType = 'cross';
-    }
-    var data = c.toDataURL("image/png");
-    var img = new Image();
-    img.src = data;
-    img.onload = function() {
-        screen.width = img.width;
-        screen.height = img.height;
-        socket.emit('new', {
-            'role': 'Client',
-            'token': token,
-            'screen': screen
-        });
-    }
+    screen.viewType = getScreenType();
+    deviceInfo.mobileInfo.screen.viewType = getScreenType();
+
+    screen.width = c.width;
+    screen.height = c.height;
+    socket.emit('new', {
+        'role': 'Client',
+        'token': token,
+        'screen': screen
+    });
+
 });
 //电脑端选定区域发生改变
 socket.on('positionChange', function(imgData) {
+    console.log('positionChange');
     var img = new Image();
     img.src = imgData.data;
     //cxt.beginPath();
     img.onload = function() {
-        cxt.putImageData(historyCanvas[0], 0, 0);
+        cxt.clearRect(0, 0, canvasWidth, canvasHeight);
         //console.log(imgData.left + '--' + imgData.top + '--' + imgData.width + '--' + imgData.height);
         cxt.drawImage(img, 0, 0);
-        historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+        lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
+        //historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
     }
 
 });
-//切换横竖屏后要显示的数据
-socket.on('viewChange', function(data) {
-    if (data.type === 'vertical') {
-        lineWidth = lineWidth * scale;
-    }else if (data.type === 'cross') {
-        var img = new Image();
-        img.src = data.imgData;
-        // img.width = 568;
-        // img.height = 320;
-        //cxt.beginPath();
-        img.onload = function() {
-          cxt.putImageData(historyCanvas[0], 0, 0);
-          //console.log(imgData.left + '--' + imgData.top + '--' + imgData.width + '--' + imgData.height);
-          cxt.drawImage(img, 0, 0,img.width ,img.height , 0, 0, img.width/data.scale,img.height/data.scale);
-          //cxt.putImageData(historyCanvas[current], 0, 0, 0, 0,$("#myCanvas").attr("width"), $("#myCanvas").attr("height"));
-        }
-        scale = data.scale;
-        lineWidth = lineWidth/data.scale;
+//电脑端信息
+socket.on('pcInfo', function(data) {
+    console.log('pcInfo:' + JSON.stringify(data));
+    deviceInfo.pcInfo = data.pcInfo;
+    if (data.scale != null) {
+        console.log('pcInfo赋值' + JSON.stringify(data));
+        deviceInfo.scale = data.scale;
     }
-
-
-    //只还原绘图环境
-    init('drawEnv');
-    drawPenChange();
 });
-
 //图像发生改变，推送图像
 function imageChange(type, data) {
     //console.log('imageChange');
@@ -452,13 +513,14 @@ function imageChange(type, data) {
     }
 }
 //开始画图事件，即手指触摸屏幕以后
-function drawStart(x, y) {
+function drawStart(x, y, shape) {
     console.log('drawStart');
     socket.emit('drawStart', {
         'point': {
             x: x,
             y: y
         },
+        'shape': shape,
         'token': token
     });
 }
@@ -581,3 +643,44 @@ $('#line_width').popover({
     //线宽滑动条初始化
     $('.nstSlider').nstSlider('set_position', lineWidth);
 });
+
+$(window).bind('orientationchange', function(e) {
+    offset = $("#myCanvasDiv").offset();
+    console.log('width:' + $(window).width());
+    deviceInfo.mobileInfo.screen.viewType = getScreenType();
+    //setTimeout('init',1000);
+    init();//考虑延迟执行
+    console.log('orientationchange------------');
+    socket.emit('screenResize', {
+        'token': token,
+        'screen': {
+            'width': c.width,
+            'height': c.height,
+            'viewType': getScreenType()
+        }
+    });
+
+    if (getScreenType() === 'cross') {
+        console.log('resize横屏');
+        cxt.clearRect(0, 0, canvasWidth, canvasHeight)
+        for(var i=0;i<=current;i++){
+            drawShape(cxt,historyCanvas[i]);
+        }
+        lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
+    }else if (getScreenType() === 'vertical') {
+    }
+});
+
+//判断当前屏幕是横屏还是竖屏
+function getScreenType() {
+    if (window.orientation == 180 || window.orientation == 0) {
+        return 'vertical';
+    } else if (window.orientation == 90 || window.orientation == -90) {
+        return 'cross';
+    } else if (window.screen.width > window.screen.height) { //以上判断一般手机都支持，这里对电脑端谷歌浏览器手机模式做适配
+        return 'cross';
+    } else if (window.screen.width < window.screen.height) {
+        return 'vertical';
+    }
+
+}

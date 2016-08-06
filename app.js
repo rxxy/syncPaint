@@ -1,12 +1,13 @@
 var express = require('express')
 var app = express()
 var url = require('url');
-
+//部署
 server = require('http').createServer(app);
 io = require('socket.io').listen(server);
 server.listen(80);
 app.use(express.static('public'));
 console.log('服务部署成功');
+//路由
 app.get('/pc',
     function(req, res) {
         res.sendfile(__dirname + '/pc.html');
@@ -23,7 +24,7 @@ app.get('/client',
             }
         }
         //没有找到pc端
-        console.log('tellPc end');
+        console.log('client url error');
         res.send('url错误，您是怎么进来的呢');
     }
 );
@@ -38,7 +39,6 @@ var pcList = new Array();
 var mobileList = new Array();
 io.on('connection', function(socket) {
     var socketId = socket.id;
-
     //console.log('connection ' + socket+'  '+socketId);
     //新的客户端
     socket.on('new', function(data) {
@@ -68,7 +68,7 @@ io.on('connection', function(socket) {
     //移动端开始画图，推送包含起始点坐标
     socket.on('drawStart', function(data) {
         var token = data.token;
-        drawStart(data.point, token);
+        drawStart(data.point,data.shape, token);
     });
     //移动端结束画图
     socket.on('drawEnd', function(data) {
@@ -90,6 +90,26 @@ io.on('connection', function(socket) {
             }
         }
     });
+    //移动端横竖屏切换
+    socket.on('screenResize', function(data) {
+        var token = data.token;
+        for (i in pcList) {
+            if (token == pcList[i].token) { //找到与手机端匹配的PC端
+                pcList[i].socket.emit('screenResize', data);
+            }
+        }
+    });
+    //推送pc的信息给移动端
+    socket.on('pcInfo', function(data) {
+        console.log('pcInfo');
+        var token = data.token;
+        for (i in mobileList) {
+            if (token == mobileList[i].token) {
+                console.log('pcInfo找到匹配的手机端');
+                mobileList[i].socket.emit('pcInfo', data);
+            }
+        }
+    });
 });
 //推送移动端端的信息给PC端
 function pushInfoToPc(data, token) {
@@ -100,10 +120,10 @@ function pushInfoToPc(data, token) {
     }
 }
 //包含起始点坐标，告诉pc移动端已经开始画图
-function drawStart(point, token) {
+function drawStart(point,shape, token) {
     for (i in pcList) {
         if (token == pcList[i].token) { //找到与手机端匹配的PC端
-            pcList[i].socket.emit('drawStart', point);
+            pcList[i].socket.emit('drawStart', point,shape);
         }
     }
 }
@@ -136,6 +156,7 @@ function pushImgToPc(data, token) {
 
 //生成一个uuid
 function uuid() {
+    //return "nihaohsidsjaklfdsjkldkjs";//开发时方便测试
     var s = [];
     var hexDigits = "0123456789abcdef";
     for (var i = 0; i < 36; i++) {
