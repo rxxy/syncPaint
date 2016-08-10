@@ -103,8 +103,13 @@ function convertPoint(shape,pcInfo,scale,point){
         point.y = (point.y + pcInfo.top)/scale.y;
         point.lineWidth = point.lineWidth/scale.x;
     }else if (shape === 'ellipse') {
+        var k = .5522848;
         point.x = (point.x + pcInfo.left)/scale.x;
         point.y = (point.y + pcInfo.top)/scale.y;
+        point.a = (point.a + pcInfo.left)/scale.x;
+        point.b = (point.b + pcInfo.top)/scale.y;
+        point.ox = point.a * k, // 水平控制点偏移量
+        point.oy = point.b * k; // 垂直控制点偏移量
     }
     return point;
 }

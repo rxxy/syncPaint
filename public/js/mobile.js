@@ -723,19 +723,27 @@ function getScreenType() {
 
 }
 
-mui.plusReady(function() {
-  	/*退出*/
-  	mui.back = function(event){
-      mui.openWindow({
-  				url: 'index.html',
-  				id: 'index',
-  				styles: {
-  					popGesture: 'hide'
-  				},
-  				waiting: {
-  					autoShow: true
-  				}
-			});
-  		return false;
-  	}
-});
+/*退出*/
+mui.back = function(event){
+  mui.openWindow({
+    url: 'index.html',
+    id: 'index',
+    waiting: {
+      autoShow: true
+    }
+  });
+  return false;
+}
+// mui.plusReady(function() {
+//
+//     // var old_back = mui.back;
+//     // mui.back = function(){
+//     //   var btn = ["确定","取消"];
+//     //   mui.confirm('确认关闭当前窗口？','Hello MUI',btn,function(e){
+//     //     if(e.index==0){
+//     //     	//执行mui封装好的窗口关闭逻辑；
+//     //     	old_back();
+//     //     }
+//     //   });
+//     // }
+// });

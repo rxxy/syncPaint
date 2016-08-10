@@ -107,8 +107,6 @@ socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的�
     var long = screen.width>screen.height?screen.width:screen.height;
     var short = screen.width<screen.height?screen.width:screen.height;
     if (screen.viewType === 'vertical') {
-        long -= 43;
-    }else {
         short -= 43;
     }
     deviceInfo.scale = {
@@ -116,7 +114,7 @@ socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的�
         y: canvasHeight / short
     };
     console.log('long:' + long + "short:" + short);
-    console.log('mobileinfo计算出来的scale.x:' + deviceInfo.scale.x);
+    console.log('mobileinfo计算出来的scale.x:' + deviceInfo.scale.x + '--' + deviceInfo.scale.y);
     socket.emit('pcInfo', {
         token: token,
         pcInfo:{
@@ -306,23 +304,7 @@ socket.on('screenResize', function(data) {
     console.log('screenResize' + "--" + JSON.stringify(screen));
     deviceInfo.mobileInfo.screen = screen;
     if (deviceInfo.mobileInfo.screen.viewType === 'cross') {
-      console.log(screen.width + '---' + canvasWidth / screen.width);
-        var long = screen.width>screen.height?screen.width:screen.height;
-        var short = screen.width<screen.height?screen.width:screen.height;
-        deviceInfo.scale = {
-            x: canvasWidth / long,
-            y: canvasHeight / short
-        };
-        console.log('screenResize计算出来的scale.x:' + deviceInfo.scale.x);
         lineWidth = cxt.lineWidth = cxt.lineWidth * deviceInfo.scale.x;
-        socket.emit('pcInfo', {
-            token: token,
-            pcInfo:{
-                top: p_top,
-                left: p_left
-            },
-            scale:deviceInfo.scale
-        });
         $('#selectRect').hide();
     }else if (deviceInfo.mobileInfo.screen.viewType === 'vertical') {
         $('#selectRect').show();
@@ -343,14 +325,6 @@ function positionChange() {
     cxt2.drawImage(img, p_left, p_top, rectWidth, rectHeight, 0, 0, rectWidth, rectHeight);
     //加载小画板数据，给客户端发过去，节省带宽，速度快
     var imgData = rectCanvas.toDataURL("image/png");
-    // historyCanvas[++current] = ({
-    //     data: cxt.getImageData(0, 0, canvasWidth, canvasHeight),
-    //     x: p_left,
-    //     y: p_top
-    // });
-    // while (current < historyCanvas.length - 1) {
-    //     historyCanvas.pop();
-    // }
     socket.emit('positionChange', {
         token: token,
         imgData: {
