@@ -1,3 +1,8 @@
+window.onload=function(){
+    setTimeout(function() {
+        window.scrollTo(0, 1)
+    }, 0);
+};
 //调整canvas的大小
 $("#myCanvas").attr("width", $(window).width());
 $("#myCanvas").attr("height", $(window).height() - 43);
@@ -148,7 +153,7 @@ function eventRebind(shape) {
                 shape: shape,
                 color: cxt.strokeStyle,
                 startPoint: startPoint,
-                lineWidth: lineWidth,
+                lineWidth: deviceInfo.mobileInfo.screen.viewType==='vertical'?lineWidth/deviceInfo.scale.x:lineWidth,
                 points: points
             };
             drawEnd();
@@ -396,7 +401,7 @@ function revoke() {
     console.log('撤销');
     //判断有没有历史画布数据
     if (current < 0) {
-        alert('撤销完啦。');
+        mui.toast('撤销完啦。');
         return;
     }
     current--;
@@ -414,7 +419,7 @@ function revoke() {
 
 function recovery() {
     if (current >= historyCanvas.length - 1) {
-        alert("没有要恢复的数据啦");
+        mui.toast("没有要恢复的数据啦");
         return;
     }
     current++;
@@ -458,14 +463,19 @@ init('init');
 socket.on('connect', function(sockets) {
     var screen = new Object();
     screen.viewType = getScreenType();
-    deviceInfo.mobileInfo.screen.viewType = getScreenType();
-
-    screen.width = c.width;
-    screen.height = c.height;
+    screen.width = $(window).width();
+    screen.height = $(window).height();
+    deviceInfo.mobileInfo.screen = screen;
     socket.emit('new', {
         'role': 'Client',
         'token': token,
-        'screen': screen
+        'screen': {
+            screen:screen,
+            canvasScreen:{
+                width: c.width,
+                height: c.height
+            }
+        }
     });
 
 });
@@ -492,6 +502,11 @@ socket.on('pcInfo', function(data) {
         console.log('pcInfo赋值' + JSON.stringify(data));
         deviceInfo.scale = data.scale;
     }
+});
+//显示端断开连接
+socket.on('pcExit', function() {
+    mui.toast('显示端断开链接');
+    console.log('pcExit');
 });
 //图像发生改变，推送图像
 function imageChange(type, data) {
@@ -645,6 +660,7 @@ $('#line_width').popover({
 });
 
 $(window).bind('orientationchange', function(e) {
+    mui.toast("orientationchange事件触发" + getScreenType());
     offset = $("#myCanvasDiv").offset();
     console.log('width:' + $(window).width());
     deviceInfo.mobileInfo.screen.viewType = getScreenType();
@@ -667,10 +683,32 @@ $(window).bind('orientationchange', function(e) {
             drawShape(cxt,historyCanvas[i]);
         }
         lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
-    }else if (getScreenType() === 'vertical') {
-    }
-});
+        lineWidth = cxt.lineWidth = lineWidth / deviceInfo.scale.x;
 
+    }else if (getScreenType() === 'vertical') {
+        lineWidth = cxt.lineWidth = lineWidth * deviceInfo.scale.x;
+    }
+    drawPenChange();
+});
+$('#screen_switch').click(function(){
+    screenSwitch();
+});
+var screen_switch_flag = true;
+//屏幕切换，横竖屏
+function screenSwitch() {
+  if (screen_switch_flag) {
+      plus.screen.lockOrientation("landscape-primary");
+      $('#screen_switch>span').removeClass('glyphicon glyphicon-resize-full');
+      $('#screen_switch>span').addClass('glyphicon glyphicon-resize-small');
+      screen_switch_flag = false;
+  }else {
+      screen_switch_flag = true;
+      $('#screen_switch>span').removeClass('glyphicon glyphicon-resize-small');
+      $('#screen_switch>span').addClass('glyphicon glyphicon-resize-full');
+      plus.screen.lockOrientation("portrait-primary");
+  }
+  //mui.toast("横屏");
+}
 //判断当前屏幕是横屏还是竖屏
 function getScreenType() {
     if (window.orientation == 180 || window.orientation == 0) {
@@ -684,3 +722,20 @@ function getScreenType() {
     }
 
 }
+
+mui.plusReady(function() {
+  	/*退出*/
+  	mui.back = function(event){
+      mui.openWindow({
+  				url: 'index.html',
+  				id: 'index',
+  				styles: {
+  					popGesture: 'hide'
+  				},
+  				waiting: {
+  					autoShow: true
+  				}
+			});
+  		return false;
+  	}
+});

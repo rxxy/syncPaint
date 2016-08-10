@@ -101,7 +101,7 @@ function convertPoint(shape,pcInfo,scale,point){
     }else if (shape === 'pen') {
         point.x = (point.x + pcInfo.left)/scale.x;
         point.y = (point.y + pcInfo.top)/scale.y;
-        point.lineWidth = point.lineWidth/scale.x*scale.y;
+        point.lineWidth = point.lineWidth/scale.x;
     }else if (shape === 'ellipse') {
         point.x = (point.x + pcInfo.left)/scale.x;
         point.y = (point.y + pcInfo.top)/scale.y;

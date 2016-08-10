@@ -100,15 +100,23 @@ socket.on('connect', function(sockets) { //在服务端注册
 var rectCanvas;
 var rectEmtpy; //这个画布的空内容数据，用于清空画布用
 socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的屏幕大小数据
+    screen = screen.screen;
     console.log('mobileInfo');
     console.log(screen);
   //  screen.height += 86;
     var long = screen.width>screen.height?screen.width:screen.height;
     var short = screen.width<screen.height?screen.width:screen.height;
+    if (screen.viewType === 'vertical') {
+        long -= 43;
+    }else {
+        short -= 43;
+    }
     deviceInfo.scale = {
         x: canvasWidth / long,
         y: canvasHeight / short
     };
+    console.log('long:' + long + "short:" + short);
+    console.log('mobileinfo计算出来的scale.x:' + deviceInfo.scale.x);
     socket.emit('pcInfo', {
         token: token,
         pcInfo:{
@@ -152,6 +160,9 @@ socket.on('imgPush', function(data) { //服务器发来图像数据
         cxt.stroke();
     } else if (data.shape === 'pen') {
         cxt.lineWidth = point.lineWidth;
+        if (deviceInfo.mobileInfo.screen.viewType === 'cross') {
+            cxt.lineWidth = point.lineWidth * deviceInfo.scale.x;
+        }
         cxt.beginPath();
         cxt.moveTo(lastPoint.x,lastPoint.y);
         cxt.lineTo(point.x, point.y);
@@ -275,7 +286,19 @@ socket.on('drawEnd', function(point) {
 socket.on('drawPenChange', function(cxtObj) {
     cxt.strokeStyle = cxtObj.strokeStyle;
     lineWidth = cxt.lineWidth = cxtObj.lineWidth;
+    if (deviceInfo.mobileInfo.screen.viewType === 'cross') {
+        lineWidth = cxt.lineWidth = cxtObj.lineWidth * deviceInfo.scale.x;
+    }
     console.log('drawPenChangecxt');
+});
+//移动端断开连接
+socket.on('mobileExit', function() {
+  var msg = Messenger().post({
+      message: '输入端断开',
+      type: 'string',
+      hideAfter: 2
+  });
+    console.log('mobileExit');
 });
 //一般是横竖屏切换
 socket.on('screenResize', function(data) {
@@ -290,6 +313,8 @@ socket.on('screenResize', function(data) {
             x: canvasWidth / long,
             y: canvasHeight / short
         };
+        console.log('screenResize计算出来的scale.x:' + deviceInfo.scale.x);
+        lineWidth = cxt.lineWidth = cxt.lineWidth * deviceInfo.scale.x;
         socket.emit('pcInfo', {
             token: token,
             pcInfo:{
@@ -301,6 +326,7 @@ socket.on('screenResize', function(data) {
         $('#selectRect').hide();
     }else if (deviceInfo.mobileInfo.screen.viewType === 'vertical') {
         $('#selectRect').show();
+        lineWidth = cxt.lineWidth = cxt.lineWidth / deviceInfo.scale.x;
         positionChange();
     }
 });

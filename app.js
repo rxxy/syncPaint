@@ -110,6 +110,30 @@ io.on('connection', function(socket) {
             }
         }
     });
+    //客户端断开连接
+    socket.on('disconnect', function(){
+      	console.log('receive disconnect event');
+        for (i in mobileList) {
+            if (this == mobileList[i].socket) {
+                console.log('移动端断开链接');
+                for (j in pcList) {
+                    if (mobileList[i].token == pcList[j].token) {
+                        pcList[j].socket.emit('mobileExit');
+                    }
+                }
+            }
+        }
+        for (i in pcList) {
+            if (this == pcList[i].socket) {
+                console.log('PC端断开链接');
+                for (j in mobileList) {
+                    if (pcList[i].token == mobileList[j].token) {
+                        mobileList[j].socket.emit('pcExit');
+                    }
+                }
+            }
+        }
+    });
 });
 //推送移动端端的信息给PC端
 function pushInfoToPc(data, token) {
