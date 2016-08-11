@@ -18,15 +18,23 @@
 	<link rel="stylesheet" type="text/css" href="css/jquery.nstSlider.min.css">
 	<link rel="stylesheet" type="text/css" href="css/style.css">
 	<script src="js/jquery.min.js"></script>
+	<script src="js/fastclick.js"></script>
 	<script src="js/jquery.nstSlider.min.js"></script>
 	<script src="js/bootstrap.js"></script>
 	<script src="js/socket.io-1.2.0.js"></script>
 	<script src="js/mui.min.js"></script>
+	<script src="js/dollar.js"></script>
+	<script src="js/recognition.js"></script>
+	<script type="text/javascript">
+	$(function() {
+			FastClick.attach(document.body);
+	});
+	</script>
 </head>
 
 <body>
 	<!-- 弹出框的container，高度为0，是看不见的，left为负数的目的是让弹出的内容在一行显示 -->
-<div id="containerDiv" style="width:4000px;float:left;position:absolute;left:-3000px"></div>
+<div id="containerDiv" style="width:100%;float:left;position:absolute;left:-300px"></div>
 
 	<div class="container-fluid">
 		<!-- 绘图板 -->
@@ -36,7 +44,7 @@
 	</div>
 
 	<!-- 按钮组 -->
- <div class="btn-group" role="group" style="width: 294px;margin: 0 auto;margin-top:5px;display: block;" id="control">
+ <div class="btn-group" role="group" style="width: 100%;margin: 0 auto;margin-top:5px;display: block;" id="control">
 
 			<button type="button" class="btn btn-default" id="revoke"><span class="
 	glyphicon glyphicon-chevron-left" aria-hidden="true"></span></button>
@@ -45,8 +53,8 @@
 			<button type="button" class="btn btn-default" id="empty"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>
 
 			<!-- 颜色按钮 -->
-			<a type="button" role="button" tabindex="0" class="btn btn-default" id="color">
-				<span class="glyphicon glyphicon-text-color" aria-hidden="true"></span>
+			<a type="button" role="button" tabindex="0" class="btn btn-default" id="color" bootstrap_component='popover'>
+					<span class="glyphicon glyphicon-text-color" aria-hidden="true"></span>
 			</a>
 			<!-- 点击上面的按钮弹出来的内容 -->
 			<div id="color_content">
@@ -56,7 +64,7 @@
 					<div id="red_btn" class="color_btn"></div>
 					<div id="yellow_btn" class="color_btn"></div>
 			</div>
-			<a type="button" role="button" tabindex="0" class="btn btn-default" id="shape"><img src="images/pencil.png" class="shapeImg"/></a>
+			<a type="button" role="button" tabindex="0" bootstrap_component='popover' class="btn btn-default" id="shape"><img src="images/pencil.png" class="shapeImg"/></a>
 			<!-- 点击上面的按钮弹出来的内容 -->
 			<div id="shape_content">
 				<div id="shapeGroup" style="width:200px">
@@ -69,7 +77,7 @@
 						<button type="button" class="btn btn-default" shape="ellipse"><img src="images/ellipse.png" class="shapeImg"/></button>
 				</div>
 			</div>
-			<a type="button" role="button" tabindex="0" class="btn btn-default" id="line_width"><img src="images/line_width.png" class="shapeImg"/></a>
+			<a type="button" role="button" bootstrap_component='popover' tabindex="0" class="btn btn-default" id="line_width"><img src="images/line_width.png" class="shapeImg"/></a>
 			<!-- 点击上面的按钮弹出来的内容 -->
 			<div id="line_width_content">
 				<div class="nstSlider" style="width:150px" data-range_min="1" data-range_max="30"
@@ -77,8 +85,46 @@
 							<div class="leftGrip"></div>
 				</div>
 			</div>
+			<!-- 其他设置 -->
+			<a type="button" role="button" tabindex="0" class="btn btn-default" id="othoer" bootstrap_component='popover'>
+					<span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+			</a>
+
 			<button type="button" class="btn btn-default" id="screen_switch"><span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
 	</div>
+	<!-- 点击上面的按钮弹出来的内容 -->
+	<!-- <div id="othoer_content">
+			<div>
+					<div><span>识别模式：</span></div>
+					<div>
+						<div class="btn-group" data-toggle="buttons-radio">
+								<button type="button" class="btn btn-primary" id="recognition_on">开启</button>
+								<button type="button" class="btn btn-primary" id="recognition_off">关闭</button>
+						</div>
+					</div>
+			</div>
+
+	</div> -->
+
+	<!-- 退出要弹出的模态框 -->
+	<!-- <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-show="false" id="quit">
+	  <div class="modal-dialog modal-sm">
+	    <div class="modal-content">
+				<div class="modal-header">
+	        <h4 class="modal-title" id="myModalLabel">提示</h4>
+	      </div>
+
+	 					 要退出吗？请记得保存喔！
+
+				 <div class="modal-footer">
+	 	        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+	 	        <button type="button" class="btn btn-primary">确定</button>
+	 	    </div>
+	    </div>
+	  </div>
+	</div> -->
+
+
 	<script src="js/mobile.js"></script>
 	<script src="js/shapeDraw.js"></script>
 </body>

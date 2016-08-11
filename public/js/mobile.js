@@ -127,16 +127,44 @@ function eventRebind(shape) {
         points = new Array();
         pointObj = new Object();
         pointObj.shape = shape;
-        // pointObj.color = cxt.strokeStyle;
-        // pointObj.startPoint = {
-        //     x: initX,
-        //     y: initY
-        // };
-        // pointObj.lineWidth = lineWidth;
         drawStart(initX, initY, shape);
     });
     $("#myCanvas").bind('touchend', function(e) {
         if (isDraw) {
+            //如果开启了识别模式
+            if (recognitionSwitch) {
+                var result = recognition_repaint(cxt,points,lastCanvasData);
+                var mobile_point;
+                var pc_point;
+                if (result != null) {
+                  mobile_point = $.extend(true, {}, result.points[0]);
+                  pc_point = $.extend(true, {}, result.points[0]);
+                  //alert('转换前：' + JSON.stringify(result.points[0]));
+                  if (getScreenType() === 'vertical') {
+                      mobile_point = convertPoint(result.shape,deviceInfo.pcInfo,deviceInfo.scale,mobile_point);
+                  }
+                  pc_point = convertPointforPc(result.shape,deviceInfo,deviceInfo.pcInfo,pc_point);
+                  //alert('转换后：' + JSON.stringify(result.points[0]) + '\nmobile_point:' + JSON.stringify(mobile_point) + '\npc_point:' + JSON.stringify(pc_point));
+                  historyCanvas[++current] = {
+                      shape: result.shape,
+                      color: cxt.strokeStyle,
+                      startPoint: {},
+                      lineWidth: deviceInfo.mobileInfo.screen.viewType==='vertical'?lineWidth/deviceInfo.scale.x:lineWidth,
+                      points: mobile_point
+                  };
+
+                  lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
+                  isDraw = false;
+                  drawEnd({shape:result.shape,point:pc_point,result:true});
+                }else {
+                    mui.toast('识别失败！');
+                    drawEnd({result:false});
+                    cxt.putImageData(lastCanvasData, 0, 0);
+                }
+                //有参数，代表是识别模式，pc端做出相应变化
+
+                return;
+            }
             var startPoint = {
                 x: initX,
               　y: initY
@@ -144,9 +172,7 @@ function eventRebind(shape) {
             if (getScreenType() === 'vertical') {
                 startPoint = convertPoint('pencil',deviceInfo.pcInfo,deviceInfo.scale,startPoint);
                 for(var i=0;i < points.length;i++){
-                    //console.log('转换前：'+points[i].x +','+ points[i].y);
                     points[i] = convertPoint(shape,deviceInfo.pcInfo,deviceInfo.scale,points[i]);
-                    //console.log('转换后：'+points[i].x + ',' + points[i].y);
                 }
             }
             historyCanvas[++current] = {
@@ -157,10 +183,6 @@ function eventRebind(shape) {
                 points: points
             };
             drawEnd();
-            //只要画了一点，就不能前进了，所以要把后边的图像清空
-            // while (current < historyCanvas.length - 1) {
-            //     historyCanvas.pop();
-            // }
             lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
             cxt.lineWidth = lineWidth;
             isDraw = false;
@@ -540,10 +562,11 @@ function drawStart(x, y, shape) {
     });
 }
 //结束画图事件，即手指离开屏幕以后
-function drawEnd() {
+function drawEnd(result) {
     console.log('drawEnd');
     socket.emit('drawEnd', {
-        'token': token
+        'token': token,
+        'result':result
     });
 }
 //画布环境发生变化，如颜色，粗细等等
@@ -578,23 +601,24 @@ $('#color').popover({
     html: true,
     placement: 'top',
     trigger: 'focus',
-    container: '#containerDiv',
+    container: 'body',
     viewport: {
         selector: 'body',
         padding: 0
     }
 }).click(function() {
+    $("[bootstrap_component=popover]").attr('popover_status','unactive');
+    $(this).attr('popover_status','active');
+    $("[popover_status=unactive]").popover('hide');
     $(this).popover('show');
     //颜色选择效果
-    $(".color_btn").click(
-        function(e) {
-            $(".color_btn").removeClass("color_btn_selected");
-            $(this).addClass("color_btn_selected");
-            lineColor = cxt.strokeStyle = $(this).css("background-color");
-            drawPenChange();
-            $("#color").popover('hide');
-        }
-    )
+    $(".color_btn").click(function(e) {
+        $(".color_btn").removeClass("color_btn_selected");
+        $(this).addClass("color_btn_selected");
+        lineColor = cxt.strokeStyle = $(this).css("background-color");
+        drawPenChange();
+        $("#color").popover('hide');
+    });
 });
 //形状按钮
 $('#shape_content').hide();
@@ -605,13 +629,16 @@ $('#shape').popover({
     html: true,
     placement: 'top',
     trigger: 'focus',
-    container: '#containerDiv',
+    container: 'body',
     viewport: {
         selector: 'body',
         padding: 0
     }
 }).click(function() {
-    //$("#color")..popover('hide');
+    //先隐藏其他的弹出框
+    $("[bootstrap_component=popover]").attr('popover_status','unactive');
+    $(this).attr('popover_status','active');
+    $("[popover_status=unactive]").popover('hide');
     $(this).popover('show');
     //选择有shape属性的元素来绑定事件
     $('[shape]').click(function() {
@@ -641,6 +668,9 @@ $('#line_width').popover({
         padding: 0
     }
 }).click(function() {
+    $("[bootstrap_component=popover]").attr('popover_status','unactive');
+    $(this).attr('popover_status','active');
+    $("[popover_status=unactive]").popover('hide');
     $(this).popover('show');
     console.log(lineWidth);
     //线宽按钮
@@ -658,9 +688,39 @@ $('#line_width').popover({
     //线宽滑动条初始化
     $('.nstSlider').nstSlider('set_position', lineWidth);
 });
+//其他设置
+// $('#othoer_content').hide();
+// $('#othoer').popover({
+//     content: function() {
+//         return $('#othoer_content').html();
+//     },
+//     html: true,
+//     placement: 'top',
+//     trigger: 'click',
+//     container: 'body',
+//     viewport: {
+//         selector: 'body',
+//         padding: 0
+//     }
+// }).click(function() {
+//     $("[bootstrap_component=popover]").attr('popover_status','unactive');
+//     $(this).attr('popover_status','active');
+//     $("[popover_status=unactive]").popover('hide');
+//     $(this).popover('show');
+//
+//     $('#recognition_on').click(function () {
+//           recognitionSwitch = true;
+//           alert('开启');
+//      });
+//
+//
+// });
+$('#othoer').click(function(){
+    recognitionSwitch = true;
+});
 
 $(window).bind('orientationchange', function(e) {
-    mui.toast("orientationchange事件触发" + getScreenType());
+  //  mui.toast("orientationchange事件触发" + getScreenType());
     offset = $("#myCanvasDiv").offset();
     console.log('width:' + $(window).width());
     deviceInfo.mobileInfo.screen.viewType = getScreenType();
@@ -725,25 +785,22 @@ function getScreenType() {
 
 /*退出*/
 mui.back = function(event){
-  mui.openWindow({
-    url: 'index.html',
-    id: 'index',
-    waiting: {
-      autoShow: true
-    }
-  });
+    var btn = ["确定","取消"];
+    mui.confirm('要退出吗？请记得保存喔','提示',btn,function(e){
+      if(e.index==0){
+        plus.screen.lockOrientation("portrait-primary");
+      	//执行mui封装好的窗口关闭逻辑；
+        mui.openWindow({
+          url: 'index.html',
+          id: 'index',
+          waiting: {
+            autoShow: true
+          }
+        });
+      }
+    });
+    // $('#quit').modal({
+    //     show:true
+    // });
   return false;
 }
-// mui.plusReady(function() {
-//
-//     // var old_back = mui.back;
-//     // mui.back = function(){
-//     //   var btn = ["确定","取消"];
-//     //   mui.confirm('确认关闭当前窗口？','Hello MUI',btn,function(e){
-//     //     if(e.index==0){
-//     //     	//执行mui封装好的窗口关闭逻辑；
-//     //     	old_back();
-//     //     }
-//     //   });
-//     // }
-// });

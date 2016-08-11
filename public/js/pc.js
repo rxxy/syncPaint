@@ -245,11 +245,6 @@ socket.on('imgPush', function(data) { //服务器发来图像数据
         cxt.drawImage(img, 0, 0,img.width,img.height);*/
         return;
     }
-
-    //cxt.putImageData(emtpyData,0,0);
-    //cxt.drawImage(img, p_left, p_top,img.width,img.height);
-
-    //console.log('imgPush----' + data.shape);
 });
 //接受起始点坐标
 socket.on('drawStart', function(point,shape) {
@@ -263,21 +258,33 @@ socket.on('drawStart', function(point,shape) {
     console.log('drawStart');
 });
 //画完一个图形
-socket.on('drawEnd', function(point) {
-    historyCanvas[++current] = {
-        shape: currentShape,
-        lineWidth: lineWidth,
-        color: cxt.strokeStyle,
-        startPoint: {
+socket.on('drawEnd', function(result) {
+    if (result != null) {//识别模式
+        cxt.putImageData(lastCanvasData, 0, 0);
+        if (result.result === true) {//识别出来啦，没进来就是没识别出来
+            historyCanvas[++current] = {
+              shape: result.shape,
+              lineWidth: lineWidth,
+              color: cxt.strokeStyle,
+              startPoint: {},
+              points: [result.point]
+            };
+            drawShape(cxt,{shape:result.shape,lineWidth:cxt.lineWidth,color:cxt.strokeStyle,points:[result.point],startPoint:{}});
+        }
+
+    }else {
+        historyCanvas[++current] = {
+          shape: currentShape,
+          lineWidth: lineWidth,
+          color: cxt.strokeStyle,
+          startPoint: {
             x: initX,
             y: initY
-        },
-        points: points
-    };
+          },
+          points: points
+        };
+    }
     lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
-    // while (current < historyCanvas.length - 1) {
-    //     historyCanvas.pop();
-    // }
     console.log('drawEnd');
 });
 //画布环境发生改变

@@ -73,7 +73,7 @@ io.on('connection', function(socket) {
     //移动端结束画图
     socket.on('drawEnd', function(data) {
         var token = data.token;
-        drawEnd(token);
+        drawEnd(token,data.result);
     });
     //移动端画布环境发生改变
     socket.on('drawPenChange', function(data) {
@@ -152,10 +152,10 @@ function drawStart(point,shape, token) {
     }
 }
 //画完一个图形
-function drawEnd(token) {
+function drawEnd(token,result) {
     for (i in pcList) {
         if (token == pcList[i].token) { //找到与手机端匹配的PC端
-            pcList[i].socket.emit('drawEnd');
+            pcList[i].socket.emit('drawEnd',result);
         }
     }
 }
