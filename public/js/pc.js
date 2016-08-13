@@ -102,7 +102,7 @@ var rectEmtpy; //这个画布的空内容数据，用于清空画布用
 socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的屏幕大小数据
     screen = screen.screen;
     console.log('mobileInfo');
-    console.log(screen);
+    //console.log(screen);
   //  screen.height += 86;
     var long = screen.width>screen.height?screen.width:screen.height;
     var short = screen.width<screen.height?screen.width:screen.height;
@@ -113,8 +113,7 @@ socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的�
         x: canvasWidth / long,
         y: canvasHeight / short
     };
-    console.log('long:' + long + "short:" + short);
-    console.log('mobileinfo计算出来的scale.x:' + deviceInfo.scale.x + '--' + deviceInfo.scale.y);
+  //  console.log('mobileinfo计算出来的scale.x:' + deviceInfo.scale.x + '--' + deviceInfo.scale.y);
     socket.emit('pcInfo', {
         token: token,
         pcInfo:{
@@ -141,7 +140,6 @@ socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的�
 
 socket.on('imgPush', function(data) { //服务器发来图像数据
     var point = data.point;
-    console.log('imgPush:' + data);
     point = convertPointforPc(data.shape,deviceInfo,{left:p_left,top:p_top},point);
     //console.log(point);
     if(data.type!='revoke' && data.type!='recovery' && data.type!='empty'){
@@ -255,10 +253,12 @@ socket.on('drawStart', function(point,shape) {
     initY = lastPoint.y;
     currentShape = shape;
     points = new Array();
-    console.log('drawStart');
+  //  console.log('drawStart');
 });
 //画完一个图形
 socket.on('drawEnd', function(result) {
+    console.log('下面时result:');
+    console.log(result);
     if (result != null) {//识别模式
         cxt.putImageData(lastCanvasData, 0, 0);
         if (result.result === true) {//识别出来啦，没进来就是没识别出来
@@ -285,7 +285,7 @@ socket.on('drawEnd', function(result) {
         };
     }
     lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
-    console.log('drawEnd');
+    //console.log('drawEnd');
 });
 //画布环境发生改变
 socket.on('drawPenChange', function(cxtObj) {

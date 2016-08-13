@@ -150,7 +150,7 @@ function eventRebind(shape) {
                       color: cxt.strokeStyle,
                       startPoint: {},
                       lineWidth: deviceInfo.mobileInfo.screen.viewType==='vertical'?lineWidth/deviceInfo.scale.x:lineWidth,
-                      points: mobile_point
+                      points: [mobile_point]
                   };
 
                   lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -572,6 +572,7 @@ function drawEnd(result) {
 //画布环境发生变化，如颜色，粗细等等
 function drawPenChange() {
     console.log('drawPenChange');
+    lastLineWidth = cxt.lineWidth;
     socket.emit('drawPenChange', {
         'token': token,
         cxt: {
@@ -672,52 +673,65 @@ $('#line_width').popover({
     $(this).attr('popover_status','active');
     $("[popover_status=unactive]").popover('hide');
     $(this).popover('show');
-    console.log(lineWidth);
     //线宽按钮
+    var leftValue;
     $('.nstSlider').nstSlider({
         "left_grip_selector": ".leftGrip",
-        "value_changed_callback": function(cause, leftValue) {
-            if (cause === 'drag_move') {
-                lineWidth = leftValue;
-                cxt.lineWidth = leftValue;
-                drawPenChange();
-                maxLineWidth = leftValue;
-            }
+        // "value_changed_callback": function(cause, leftValue) {
+        //     if (cause === 'drag_move') {
+        //         lineWidth = leftValue;
+        //         cxt.lineWidth = leftValue;
+        //         maxLineWidth = leftValue;
+        //     }
+        // },
+        "user_mouseup_callback":function(vmin, vmax, left_grip_moved){
+            lineWidth = vmin;
+            cxt.lineWidth = vmin;
+            maxLineWidth = vmin;
+            drawPenChange();
         }
     });
     //线宽滑动条初始化
     $('.nstSlider').nstSlider('set_position', lineWidth);
 });
 //其他设置
-// $('#othoer_content').hide();
-// $('#othoer').popover({
-//     content: function() {
-//         return $('#othoer_content').html();
-//     },
-//     html: true,
-//     placement: 'top',
-//     trigger: 'click',
-//     container: 'body',
-//     viewport: {
-//         selector: 'body',
-//         padding: 0
-//     }
-// }).click(function() {
-//     $("[bootstrap_component=popover]").attr('popover_status','unactive');
-//     $(this).attr('popover_status','active');
-//     $("[popover_status=unactive]").popover('hide');
-//     $(this).popover('show');
-//
-//     $('#recognition_on').click(function () {
-//           recognitionSwitch = true;
-//           alert('开启');
-//      });
-//
-//
-// });
-$('#othoer').click(function(){
-    recognitionSwitch = true;
+$('#othoer_content').hide();
+$('#othoer').popover({
+    content: function() {
+        return $('#othoer_content').html();
+    },
+    html: true,
+    placement: 'top',
+    trigger: 'focus',
+    container: 'body',
+    viewport: {
+        selector: 'body',
+        padding: 0
+    }
+}).click(function() {
+    $("[bootstrap_component=popover]").attr('popover_status','unactive');
+    $(this).attr('popover_status','active');
+    $("[popover_status=unactive]").popover('hide');
+    $(this).popover('show');
+
+    // $('#recognition_on').click(function () {
+    //       recognitionSwitch = true;
+    //       alert('开启');
+    //  });
+    var elem = recognitionSwitch?'recognition_on':'recognition_off';
+    // $('input[type=radio]').removeAttr('checked');
+    $('#'+elem).click();
+    $("input[name=recognition]").click(function() {
+      var selectedvalue = $("input[name='recognition']:checked").val();
+      console.log(selectedvalue);
+      recognitionSwitch = selectedvalue==="on"?true:false;
+      // $('#'+elem).attr('checked','checked');
+    });
+
 });
+// $('#othoer').click(function(){
+//     recognitionSwitch = true;
+// });
 
 $(window).bind('orientationchange', function(e) {
   //  mui.toast("orientationchange事件触发" + getScreenType());

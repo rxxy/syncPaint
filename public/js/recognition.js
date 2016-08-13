@@ -9,7 +9,7 @@ var recognitionSwitch = false;
 
 function recognition_repaint(cxt,points,lastCanvasData){
     //xy大小写转换
-    console.log(points);
+
     $.each(points,function(index,value){
         points[index].X = points[index].x;
         points[index].Y = points[index].y;
@@ -20,7 +20,7 @@ function recognition_repaint(cxt,points,lastCanvasData){
 		console.log('识别结果：' + JSON.stringify(result));
 		//以下内容开始根据识别图形绘制标准图形
     var requirePoint = {};
-		var topP;
+		var topP = points[0];
 		var top,down,left,right;
 		left = right = points[0].X;
 		top = down = points[0].Y;
@@ -51,7 +51,14 @@ function recognition_repaint(cxt,points,lastCanvasData){
         requirePoint.r = r;
         requirePoint.x = x;
         requirePoint.y = y;
-		}else if (result.Name === 'caret') {
+		}else if (result.Name === 'caret') {  //这个是补字符号，貌似是一个倒V
+        result.Name = 'rect';
+		    cxt.strokeRect(left, top, right-left, down-top);
+        requirePoint.left = left;
+        requirePoint.top = top;
+        requirePoint.x = right-left;
+        requirePoint.y = down-top;
+		}else if (result.Name === 'rectangle') {
         result.Name = 'rect';
 		    cxt.strokeRect(left, top, right-left, down-top);
         requirePoint.left = left;

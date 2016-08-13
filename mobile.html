@@ -34,18 +34,16 @@
 
 <body>
 	<!-- 弹出框的container，高度为0，是看不见的，left为负数的目的是让弹出的内容在一行显示 -->
-<div id="containerDiv" style="width:100%;float:left;position:absolute;left:-300px"></div>
+<div id="containerDiv" style="width:100%;height:100%float:left;position:absolute;left:-478px"></div>
 
-	<div class="container-fluid">
 		<!-- 绘图板 -->
-		<div class="row" id="myCanvasDiv">
-			<canvas id="myCanvas" style="border:1px solid #eee"></canvas>
+		<div id="myCanvasDiv">
+			<canvas id="myCanvas"></canvas>
 		</div>
-	</div>
 
 	<!-- 按钮组 -->
- <div class="btn-group" role="group" style="width: 100%;margin: 0 auto;margin-top:5px;display: block;" id="control">
-
+	<div style="text-align: center;">
+ <div class="btn-group" role="group" style="margin: 0 auto;margin-top:5px;display: inline-block;" id="control">
 			<button type="button" class="btn btn-default" id="revoke"><span class="
 	glyphicon glyphicon-chevron-left" aria-hidden="true"></span></button>
 			<button type="button" class="btn btn-default" id="recovery"><span class="
@@ -89,22 +87,25 @@
 			<a type="button" role="button" tabindex="0" class="btn btn-default" id="othoer" bootstrap_component='popover'>
 					<span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
 			</a>
+			<!-- 点击上面的按钮弹出来的内容 -->
+			<div id="othoer_content">
+						<div>
+							<div><span>识别模式：</span></div>
+							<div>
+									<input type="radio" name="recognition" value="on" id="recognition_on" />开启
+									<input type="radio" name="recognition" value="off" checked="checked" id="recognition_off" />关闭
 
-			<button type="button" class="btn btn-default" id="screen_switch"><span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
-	</div>
-	<!-- 点击上面的按钮弹出来的内容 -->
-	<!-- <div id="othoer_content">
-			<div>
-					<div><span>识别模式：</span></div>
-					<div>
-						<div class="btn-group" data-toggle="buttons-radio">
-								<button type="button" class="btn btn-primary" id="recognition_on">开启</button>
-								<button type="button" class="btn btn-primary" id="recognition_off">关闭</button>
+								<!-- <div class="btn-group" data-toggle="buttons-radio">
+										<button type="button" class="btn btn-primary" id="recognition_on">开启</button>
+										<button type="button" class="btn btn-primary" id="recognition_off">关闭</button>
+								</div> -->
+							</div>
 						</div>
-					</div>
+						
 			</div>
+			<button type="button" class="btn btn-default" id="screen_switch"><span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
 
-	</div> -->
+	</div>
 
 	<!-- 退出要弹出的模态框 -->
 	<!-- <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-show="false" id="quit">
@@ -123,7 +124,7 @@
 	    </div>
 	  </div>
 	</div> -->
-
+</div>
 
 	<script src="js/mobile.js"></script>
 	<script src="js/shapeDraw.js"></script>
