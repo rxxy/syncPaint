@@ -59,6 +59,8 @@ var lastTimestamp = 0;
 var lastLineWidth = -1;
 //记录用户是否画线了，如点击一下屏幕就不会画线，主要为了区分点击时不作为一次画线记录
 var isDraw = false;
+//当前的画笔形状，如pen，rect等等
+var currentPenShape;
 //初始化画笔(主要是那些全局变量)
 function init(type) {
     var long = $(window).width()>$(window).height()?$(window).width():$(window).height();
@@ -103,6 +105,7 @@ function init(type) {
 //--------------------------------------------------------添加事件监听----------------------------------------------------------
 //统一事件监听，提高代码可复用，减少重复代码 由各个形状按钮触发
 function eventRebind(shape) {
+    currentPenShape = shape;
     //隐藏点击形状出来那个弹出框
     $("#shape").popover('hide');
     //若上一次绑定的是pen形状，则需要同步绘图环境（主要是画笔粗细）
@@ -635,7 +638,13 @@ $('#shape').popover({
         selector: 'body',
         padding: 0
     }
-}).click(function() {
+}).click(function(e) {
+    if (recognitionSwitch) {
+        mui.toast('请关闭识别模式后再选择');
+        e.preventDefault();
+        e.returnValue = false;
+        return false;
+    }
     //先隐藏其他的弹出框
     $("[bootstrap_component=popover]").attr('popover_status','unactive');
     $(this).attr('popover_status','active');
@@ -677,13 +686,6 @@ $('#line_width').popover({
     var leftValue;
     $('.nstSlider').nstSlider({
         "left_grip_selector": ".leftGrip",
-        // "value_changed_callback": function(cause, leftValue) {
-        //     if (cause === 'drag_move') {
-        //         lineWidth = leftValue;
-        //         cxt.lineWidth = leftValue;
-        //         maxLineWidth = leftValue;
-        //     }
-        // },
         "user_mouseup_callback":function(vmin, vmax, left_grip_moved){
             lineWidth = vmin;
             cxt.lineWidth = vmin;
@@ -694,44 +696,23 @@ $('#line_width').popover({
     //线宽滑动条初始化
     $('.nstSlider').nstSlider('set_position', lineWidth);
 });
-//其他设置
-$('#othoer_content').hide();
-$('#othoer').popover({
-    content: function() {
-        return $('#othoer_content').html();
-    },
-    html: true,
-    placement: 'top',
-    trigger: 'focus',
-    container: 'body',
-    viewport: {
-        selector: 'body',
-        padding: 0
+//识别模式开关
+var lastPenShape;
+$('#othoer').click(function(){
+    if ($(this).attr('class').indexOf('recognition-active')!=-1) {
+        $(this).removeClass('recognition-active');
+        recognitionSwitch = false;
+        mui.toast('识别模式已关闭，画笔已解锁');
+        eventRebind(lastPenShape);
+    }else {
+        $(this).addClass('recognition-active');
+        recognitionSwitch = true;
+        mui.toast('识别模式开启，画笔已锁定');
+        lastPenShape = currentPenShape;
+        eventRebind('pencil');
     }
-}).click(function() {
-    $("[bootstrap_component=popover]").attr('popover_status','unactive');
-    $(this).attr('popover_status','active');
-    $("[popover_status=unactive]").popover('hide');
-    $(this).popover('show');
-
-    // $('#recognition_on').click(function () {
-    //       recognitionSwitch = true;
-    //       alert('开启');
-    //  });
-    var elem = recognitionSwitch?'recognition_on':'recognition_off';
-    // $('input[type=radio]').removeAttr('checked');
-    $('#'+elem).click();
-    $("input[name=recognition]").click(function() {
-      var selectedvalue = $("input[name='recognition']:checked").val();
-      console.log(selectedvalue);
-      recognitionSwitch = selectedvalue==="on"?true:false;
-      // $('#'+elem).attr('checked','checked');
-    });
 
 });
-// $('#othoer').click(function(){
-//     recognitionSwitch = true;
-// });
 
 $(window).bind('orientationchange', function(e) {
   //  mui.toast("orientationchange事件触发" + getScreenType());

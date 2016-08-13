@@ -43,6 +43,9 @@ body{
 /*.popover_table>tr{
 		margin-bottom: 5px;
 }*/
-.popover-content>div>div{
+/*.popover-content>div>div{
 		display: inline;
+}*/
+.recognition-active{
+		background-color: silver;
 }
