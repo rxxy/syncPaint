@@ -594,12 +594,19 @@ function minmapClickFunction(){
         $('#minmapCanvasData').css('height',parseInt($('#minmap_content').css('height')));
     }
 }
-$(window).bind('orientationchange', function(e) {
+
+$(window).resizeEnd({
+    delay: 50
+}, function(){
+    orientationchangeFunction();
+});
+//横竖屏切换要做的事情
+function orientationchangeFunction(){
   //  mui.toast("orientationchange事件触发" + getScreenType());
     offset = $("#myCanvasDiv").offset();
     console.log('width:' + $(window).width());
     deviceInfo.mobileInfo.screen.viewType = getScreenType();
-    //setTimeout('init',1000);
+    //setTimeout('init',500);
     init();//考虑延迟执行
     console.log('orientationchange------------');
     socket.emit('screenResize', {
@@ -626,7 +633,9 @@ $(window).bind('orientationchange', function(e) {
         $('#minmap').bind('click',minmapClickFunction);
     }
     drawPenChange();
-});
+}
+
+
 $('#screen_switch').click(function(){
     screenSwitch();
 });
@@ -719,7 +728,8 @@ $("#rect").bind('touchmove', function(e) {
         rectPositionChange({top:(y-diffTop)*yScale,left:(x - diffLeft)*xScale});
         pre_x = x;
         pre_y = y;
-
+        e.returnValue = false;
+        return false;
 });
 $("#rect").bind('touchend', function(e) {
     socket.emit('rectTouchEnd', {

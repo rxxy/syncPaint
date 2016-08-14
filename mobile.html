@@ -39,7 +39,7 @@
 
 		<!-- 绘图板 -->
 		<div id="myCanvasDiv">
-			<canvas id="myCanvas"></canvas>
+			<canvas id="myCanvas" style="-webkit-transform: translate3d(0, 0, 0);-moz-transform: translate3d(0, 0, 0);-ms-transform: translate3d(0, 0, 0);transform: translate3d(0, 0, 0);"></canvas>
 		</div>
 
 	<!-- 按钮组 -->
@@ -108,14 +108,14 @@
 </div>
 <!-- 加载完mobile.js后隐藏。 -->
 <div id="empty_div_cover" style="width:99%;height:1900px;background-color:white;position: absolute;left: 0;top: 0;"></div>
-
+	<script src="js/jQuery.resizeEnd.min.js"></script>
 	<script src="js/event_function.js"></script>
 	<script src="js/mobile.js"></script>
 	<script type="text/javascript">
 			$('#empty_div_cover').css('height',$(window).height()-43);
 			//之前是白色的。等mobile.js加载好以后改为透明，这样不会显示加载时的一些按钮，美观
 			//$('#empty_div_cover').css('background-color','');
-			
+
 
 			$('#empty_div_cover').css('display','none');
 

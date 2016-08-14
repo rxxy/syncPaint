@@ -79,7 +79,9 @@ function recognition_repaint(cxt,points,lastCanvasData){
         requirePoint.y2 = down;
         requirePoint.x3 = right;
         requirePoint.y3 = down;
-		}else {
+		}else if (result.Name === 'check'){//对勾
+        
+    }else{
         result.Name = '未识别';
 		}
     if (result.Name != '未识别') {
