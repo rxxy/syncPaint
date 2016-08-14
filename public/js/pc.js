@@ -118,7 +118,9 @@ socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的�
         token: token,
         pcInfo:{
             top: p_top,
-            left: p_left
+            left: p_left,
+            width: canvasWidth,
+            height: canvasHeight
         },
         scale:deviceInfo.scale
     });
@@ -319,7 +321,23 @@ socket.on('screenResize', function(data) {
         positionChange();
     }
 });
+//移动端minmap位置变化
+socket.on('rectTouchMove', function(data) {
+    var position = data.data;
+    console.log('rectTouchMove' + position.left + '---' + position.top);
+    if (position.left >= 0 && position.left <= canvasWidth-rectWidth) { //可以水平移动
+          $('#selectRect').css('left', position.left);
+          p_left = position.left;
+    }
+    if (position.top >= 0 && position.top <= canvasHeight-rectHeight) { //可以垂直移动
+        $('#selectRect').css('top', position.top);
+        p_top = position.top;
+    }
 
+});
+socket.on('rectTouchEnd', function() {
+    positionChange();
+});
 //矩形区域位置改变
 function positionChange() {
     //先在小画板画出来

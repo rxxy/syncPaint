@@ -17,7 +17,9 @@ var deviceInfo = {
     }, //PC和移动端缩放倍数
     pcInfo: {
       top: 0,
-      left: 0
+      left: 0,
+      width:0,
+      height:0
     },
     mobileInfo: {
         screen:{
@@ -120,8 +122,10 @@ function eventRebind(shape) {
     });
     //移动端touch事件
     $("#myCanvas").bind('touchstart', function(e) {
+        var touches = e.originalEvent.targetTouches;
+        //console.log(touches.length);
         cxt.beginPath();
-        var touch = e.originalEvent.changedTouches[0];
+        var touch = touches[0];
         initX = touch.clientX - offset.left;
         initY = touch.clientY - offset.top;
         lastPoint.x = initX;
@@ -194,203 +198,31 @@ function eventRebind(shape) {
     //根据参数绑定对应的事件
     if (shape === 'pencil') {
         $("#myCanvas").bind('touchmove', function(e) {
-            isDraw = true;
-            cxt.beginPath();
-            var touch = e.originalEvent.changedTouches[0];
-            var x = touch.clientX - offset.left;
-            var y = touch.clientY - offset.top;
-            // x += 0.5;
-            // y += 0.5;
-            cxt.moveTo(lastPoint.x, lastPoint.y);
-            cxt.lineTo(x, y);
-            lastPoint.x = x;
-            lastPoint.y = y;
-            cxt.closePath();
-            cxt.stroke();
-            currentPoint = {
-                x: x,
-                y: y
-            };
-            points.push(currentPoint);
-            imageChange();
-            //禁止手指滑动时屏幕跟着滚动
-            e.returnValue = false;
-            return false;
+            return touchmove_pencil(e);
         });
     } else if (shape === 'rect') {
         $("#myCanvas").bind('touchmove', function(e) {
-            isDraw = true;
-            cxt.beginPath();
-            var touch = e.originalEvent.changedTouches[0];
-            var x = touch.clientX - offset.left;
-            var y = touch.clientY - offset.top;
-            cxt.putImageData(lastCanvasData, 0, 0);
-            cxt.strokeRect(initX, initY, x - initX, y - initY);
-            currentPoint = {
-                left: initX,
-                top: initY,
-                x: x - initX,
-                y: y - initY
-            };
-            points.push(currentPoint);
-            imageChange();
-            //禁止手指滑动时屏幕跟着滚动
-            e.returnValue = false;
-            return false;
+            return touchmove_rect(e);
         });
     } else if (shape === 'circle') {
         $("#myCanvas").bind('touchmove', function(e) {
-            isDraw = true;
-            cxt.beginPath();
-            var touch = e.originalEvent.changedTouches[0];
-            var x = touch.clientX - offset.left;
-            var y = touch.clientY - offset.top;
-            cxt.putImageData(lastCanvasData, 0, 0);
-            temp1 = x - initX;
-            temp2 = y - initY;
-            var r = Math.sqrt((temp1) * (temp1) + (temp2) * (temp2)) / 2;
-            cxt.arc((temp1) / 2 + initX, (temp2) / 2 + initY, r, 0, 2 * Math.PI);
-            cxt.stroke();
-            currentPoint = {
-                x: (temp1) / 2 + initX,
-                y: (temp2) / 2 + initY,
-                r: r
-            };
-            points.push(currentPoint);
-            imageChange();
-            //禁止手指滑动时屏幕跟着滚动
-            e.returnValue = false;
-            return false;
+            return touchmove_circle(e);
         });
     } else if (shape === 'triangle') {
         $("#myCanvas").bind('touchmove', function(e) {
-            isDraw = true;
-            cxt.beginPath();
-            var touch = e.originalEvent.changedTouches[0];
-            var x = touch.clientX - offset.left;
-            var y = touch.clientY - offset.top;
-            cxt.putImageData(lastCanvasData, 0, 0);
-            temp = (x - initX) / 2 + initX;
-            cxt.moveTo(initX, y);
-            cxt.lineTo(x, y);
-            cxt.moveTo(x, y);
-            cxt.lineTo(temp, initY);
-            cxt.moveTo(temp, initY);
-            cxt.lineTo(initX, y);
-            cxt.stroke();
-            currentPoint = {
-                x1: initX,
-                y1: y,
-                x2: x,
-                y2: y,
-                x3: temp,
-                y3: initY
-            };
-            points.push(currentPoint);
-            imageChange();
-            //禁止手指滑动时屏幕跟着滚动
-            e.returnValue = false;
-            return false;
+            return touchmove_triangle(e);
         });
     } else if (shape === 'line') {
         $("#myCanvas").bind('touchmove', function(e) {
-            isDraw = true;
-            cxt.beginPath();
-            var touch = e.originalEvent.changedTouches[0];
-            var x = touch.clientX - offset.left;
-            var y = touch.clientY - offset.top;
-            cxt.putImageData(lastCanvasData, 0, 0);
-
-            cxt.moveTo(initX, initY);
-            cxt.lineTo(x, y);
-            cxt.stroke();
-            currentPoint = {
-                x: x,
-                y: y
-            };
-            points.push(currentPoint);
-            imageChange();
-            //禁止手指滑动时屏幕跟着滚动
-            e.returnValue = false;
-            return false;
+            touchmove_line(e);
         });
     } else if (shape === 'pen') {
         $("#myCanvas").bind('touchmove', function(e) {
-            isDraw = true;
-            var touch = e.originalEvent.changedTouches[0];
-            var x = touch.clientX - offset.left;
-            var y = touch.clientY - offset.top;
-            //console.log('x:'+x+',y:'+y);
-
-            var curTimestamp = new Date().getTime();
-            var s = calcDistance({
-                x: x,
-                y: y
-            }, {
-                x: lastPoint.x,
-                y: lastPoint.y
-            })
-            var t = curTimestamp - lastTimestamp
-            cxt.lineWidth = calcLineWidth(t, s);
-            cxt.beginPath();
-            cxt.moveTo(lastPoint.x, lastPoint.y);
-            cxt.lineTo(x, y);
-            cxt.closePath();
-            cxt.stroke();
-            currentPoint = {
-                x: x,
-                y: y,
-                lineWidth: cxt.lineWidth
-            };
-            points.push(currentPoint);
-            imageChange();
-            lastPoint.x = x;
-            lastPoint.y = y;
-            lastTimestamp = curTimestamp
-            lastLineWidth = cxt.lineWidth;
-            //禁止手指滑动时屏幕跟着滚动
-            e.returnValue = false;
-            return false;
+            return touchmove_pen(e);
         });
     } else if (shape === 'ellipse') {
         $("#myCanvas").bind('touchmove', function(e) {
-            isDraw = true;
-            var touch = e.originalEvent.changedTouches[0];
-            var x = touch.clientX - offset.left;
-            var y = touch.clientY - offset.top;
-            cxt.putImageData(lastCanvasData, 0, 0);
-            var temp1 = x - initX;
-            var temp2 = y - initY;
-            var a = temp1 / 2;
-            var b = temp2 / 2;
-            x = temp1 / 2 + initX;
-            y = temp2 / 2 + initY;
-            //三次贝塞尔曲线法
-            var k = .5522848,
-                ox = a * k, // 水平控制点偏移量
-                oy = b * k; // 垂直控制点偏移量
-            cxt.beginPath();
-            //从椭圆的左端点开始顺时针绘制四条三次贝塞尔曲线
-            cxt.moveTo(x - a, y);
-            cxt.bezierCurveTo(x - a, y - oy, x - ox, y - b, x, y - b);
-            cxt.bezierCurveTo(x + ox, y - b, x + a, y - oy, x + a, y);
-            cxt.bezierCurveTo(x + a, y + oy, x + ox, y + b, x, y + b);
-            cxt.bezierCurveTo(x - ox, y + b, x - a, y + oy, x - a, y);
-            cxt.closePath();
-            cxt.stroke();
-            currentPoint = {
-                x: x,
-                y: y,
-                a: a,
-                b: b,
-                ox: ox,
-                oy: oy
-            };
-            points.push(currentPoint);
-            imageChange();
-            //禁止手指滑动时屏幕跟着滚动
-            e.returnValue = false;
-            return false;
+            return touchmove_ellipse(e);
         });
     } else {
         //不修改代码是不会到这里滴...
@@ -522,7 +354,23 @@ socket.on('positionChange', function(imgData) {
 //电脑端信息
 socket.on('pcInfo', function(data) {
     console.log('pcInfo:' + JSON.stringify(data));
-    deviceInfo.pcInfo = data.pcInfo;
+    deviceInfo.pcInfo.left = data.pcInfo.left;
+    deviceInfo.pcInfo.top = data.pcInfo.top;
+    if (data.pcInfo.width!=null) {
+        deviceInfo.pcInfo.width = data.pcInfo.width;
+    }
+    if (data.pcInfo.height!=null) {
+        deviceInfo.pcInfo.height = data.pcInfo.height;
+    }
+    //设置minmap的高度
+    var rectScale = deviceInfo.pcInfo.width/deviceInfo.mobileInfo.screen.width;
+    var height = deviceInfo.pcInfo.height/rectScale;
+    $('#rect').css('width', canvasWidth/rectScale);
+    $('#rect').css('height',canvasHeight/rectScale);
+    //minmap的高度和位置
+    $('#minmap_content').css('height',height+'px');
+    $('#minmap_content').css('top',($(window).height()-43)/2-parseInt($('#minmap_content').css('height'))/2);
+
     if (data.scale != null) {
         console.log('pcInfo赋值' + JSON.stringify(data));
         deviceInfo.scale = data.scale;
@@ -713,7 +561,34 @@ $('#othoer').click(function(){
     }
 
 });
-
+//minmap开关
+$('#minmap').click(function(){
+    if ($(this).attr('class').indexOf('recognition-active')!=-1) {
+        console.log('if');
+        $(this).removeClass('recognition-active');
+        $('#minmap_content').css('display','none');
+        $('#empty_div_cover').hide();
+    }else {
+        console.log('else');
+        $(this).addClass('recognition-active');
+        $('#minmap_content').css('display','block');
+        $('#empty_div_cover').show();
+        var rectCanvas = document.createElement('canvas');
+        //canvas.id = "CursorLayer";
+        rectCanvas.width = canvasHeight;
+        rectCanvas.height = canvasWidth-43;
+        rectCanvas.style.display = 'none';
+        var minmapCxt = rectCanvas.getContext('2d');
+        document.body.appendChild(rectCanvas);
+        cxt.clearRect(0, 0, rectCanvas.width, rectCanvas.height)
+        for(var i=0;i<=current;i++){
+            drawShape(minmapCxt,historyCanvas[i]);
+        }
+        $('#minmapCanvasData').attr('src',rectCanvas.toDataURL("image/png"));
+        $('#minmapCanvasData').css('width',canvasWidth);
+        $('#minmapCanvasData').css('height',parseInt($('#minmap_content').css('height')));
+    }
+});
 $(window).bind('orientationchange', function(e) {
   //  mui.toast("orientationchange事件触发" + getScreenType());
     offset = $("#myCanvasDiv").offset();
@@ -794,8 +669,74 @@ mui.back = function(event){
         });
       }
     });
-    // $('#quit').modal({
-    //     show:true
-    // });
   return false;
+}
+var pre_x = 0;
+var pre_y = 0;
+var diffLeft;
+var diffTop;
+//minmap里的矩形区域的事件
+$("#rect").bind('touchmove', function(e) {
+        var touches = e.originalEvent.changedTouches;
+        var touch = touches[0];
+        var x = touch.clientX - offset.left;
+        var y = touch.clientY - offset.top;
+        var left_css = $('#rect').css('left');
+        var top_css = $('#rect').css('top');
+        p_left = parseInt(left_css.substring(0, left_css.length - 2));
+        p_top = parseInt(top_css.substring(0, top_css.length - 2));
+
+        var rectWidthCss = $('#rect').css('width');
+        var rectHeightCss = $('#rect').css('height');
+        var rectWidth = parseInt(rectWidthCss.substring(0, rectWidthCss.length - 2));
+        var rectHeight = parseInt(rectHeightCss.substring(0, rectHeightCss.length - 2));
+        var minmapWidth = $('#minmap_content').css('width').substring(0,$('#minmap_content').css('width').length-2);
+        var minmapHeight = $('#minmap_content').css('height').substring(0,$('#minmap_content').css('height').length-2);
+        if ((x - pre_x < 0 && p_left > 0 ) || (x - pre_x > 0 && p_left < minmapWidth - rectWidth)) { //可以水平移动
+            if ( (x - diffLeft) >= 0 && (x - diffLeft) <= minmapWidth-rectWidth) {
+                $('#rect').css('left', x - diffLeft);
+                //console.log('pre_x:' + pre_x + ',pre_y:' + pre_y);
+                //console.log('resultX:' + resultX);
+            }
+        }
+        if ((y - pre_y < 0 && p_top > 0 ) || (y - pre_y > 0 && p_top < minmapHeight - rectHeight-3)) { //可以垂直移动
+            if ( (y - diffTop) >= 0 && (y - diffTop) <= minmapHeight-rectHeight) {
+              $('#rect').css('top', y - diffTop);
+            }
+        }
+        var xScale = deviceInfo.pcInfo.width/parseInt($('#minmap_content').css('width'));
+        var yScale = deviceInfo.pcInfo.height/parseInt($('#minmap_content').css('height'));
+        console.info(y-diffTop);
+        console.info(yScale);
+        console.log({top:(y-diffTop)*yScale,left:(x - diffLeft)*xScale});
+        rectPositionChange({top:(y-diffTop)*yScale,left:(x - diffLeft)*xScale});
+        pre_x = x;
+        pre_y = y;
+
+});
+$("#rect").bind('touchend', function(e) {
+    socket.emit('rectTouchEnd', {
+        'token': token
+    });
+});
+
+$("#rect").bind('touchstart', function(e) {
+    var touches = e.originalEvent.changedTouches;
+    var touch = touches[0];
+    pre_x = touch.clientX - offset.left;
+    pre_y = touch.clientY - offset.top;
+
+    var left_css = $('#rect').css('left');
+    var top_css = $('#rect').css('top');
+    p_left = parseInt(left_css.substring(0, left_css.length - 2));
+    p_top = parseInt(top_css.substring(0, top_css.length - 2));
+    diffLeft = pre_x - p_left;
+    diffTop = pre_y - p_top;
+});
+//移动端控制矩形区域移动
+function rectPositionChange(data){
+  socket.emit('rectTouchMove', {
+      'token': token,
+      'data': data
+  });
 }

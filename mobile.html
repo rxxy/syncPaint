@@ -27,6 +27,7 @@
 	<script src="js/recognition.js"></script>
 	<script type="text/javascript">
 	$(function() {
+		<!-- 使用fastclick加速点击事件反应速度 -->
 			FastClick.attach(document.body);
 	});
 	</script>
@@ -54,66 +55,73 @@
 			<a type="button" role="button" tabindex="0" class="btn btn-default" id="color" bootstrap_component='popover'>
 					<span class="glyphicon glyphicon-text-color" aria-hidden="true"></span>
 			</a>
-			<!-- 点击上面的按钮弹出来的内容 -->
-			<div id="color_content">
-					<div id="black_btn" class="color_btn"></div>
-					<div id="blue_btn" class="color_btn"></div>
-					<div id="green_btn" class="color_btn"></div>
-					<div id="red_btn" class="color_btn"></div>
-					<div id="yellow_btn" class="color_btn"></div>
-			</div>
+			<!-- 形状按钮 -->
 			<a type="button" role="button" tabindex="0" bootstrap_component='popover' class="btn btn-default" id="shape"><img src="images/pencil.png" class="shapeImg"/></a>
-			<!-- 点击上面的按钮弹出来的内容 -->
-			<div id="shape_content">
-				<div id="shapeGroup" style="width:200px">
-				    <button type="button" class="btn btn-default  active" shape="pencil"><img src="images/pencil.png" class="shapeImg"/></button>
-						<button type="button" class="btn btn-default" shape="pen"><img src="images/pen.png" class="shapeImg"/></button>
-						<button type="button" class="btn btn-default" shape="rect"><img src="images/rectangle.png" class="shapeImg"/></button>
-				    <button type="button" class="btn btn-default" shape="triangle"><img src="images/triangle.png" class="shapeImg"/></button>
-				    <button type="button" class="btn btn-default" shape="circle"><img src="images/circle.png" class="shapeImg"/></button>
-				    <button type="button" class="btn btn-default" shape="line"><img src="images/line.png" class="shapeImg"/></button>
-						<button type="button" class="btn btn-default" shape="ellipse"><img src="images/ellipse.png" class="shapeImg"/></button>
-				</div>
-			</div>
+			<!-- 线宽按钮 -->
 			<a type="button" role="button" bootstrap_component='popover' tabindex="0" class="btn btn-default" id="line_width"><img src="images/line_width.png" class="shapeImg"/></a>
-			<!-- 点击上面的按钮弹出来的内容 -->
-			<div id="line_width_content">
-				<div class="nstSlider" style="width:150px" data-range_min="1" data-range_max="30"
-										 data-cur_min="0">
-							<div class="leftGrip"></div>
-				</div>
-			</div>
 			<!-- 其他设置 -->
 			<a type="button" role="button" tabindex="0" class="btn btn-default" id="othoer">
 					<img src="images/recognition.png" class="shapeImg"/>
 					<!-- <span class="glyphicon glyphicon-cog" aria-hidden="true"></span> -->
 			</a>
-			<!-- 点击上面的按钮弹出来的内容 -->
-
+			<!-- minmap按钮 -->
+			<a type="button" role="button" tabindex="0" class="btn btn-default" id="minmap">
+					<img src="images/location.png" class="shapeImg"/>
+			</a>
+			<!--全屏按钮 -->
 			<button type="button" class="btn btn-default" id="screen_switch"><span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
-
 	</div>
-
-	<!-- 退出要弹出的模态框 -->
-	<!-- <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-show="false" id="quit">
-	  <div class="modal-dialog modal-sm">
-	    <div class="modal-content">
-				<div class="modal-header">
-	        <h4 class="modal-title" id="myModalLabel">提示</h4>
-	      </div>
-
-	 					 要退出吗？请记得保存喔！
-
-				 <div class="modal-footer">
-	 	        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-	 	        <button type="button" class="btn btn-primary">确定</button>
-	 	    </div>
-	    </div>
-	  </div>
-	</div> -->
 </div>
+<!-- 按钮组结束 -->
+<!-- -->
+<!-- 点击上面的按钮弹出来的内容 -->
+<div id="color_content">
+		<div id="black_btn" class="color_btn"></div>
+		<div id="blue_btn" class="color_btn"></div>
+		<div id="green_btn" class="color_btn"></div>
+		<div id="red_btn" class="color_btn"></div>
+		<div id="yellow_btn" class="color_btn"></div>
+</div>
+<!-- 点击上面的按钮弹出来的内容 -->
+<div id="line_width_content">
+	<div class="nstSlider" style="width:150px" data-range_min="1" data-range_max="30"
+							 data-cur_min="0">
+				<div class="leftGrip"></div>
+	</div>
+</div>
+<!-- 点击上面的按钮弹出来的内容 -->
+<div id="shape_content">
+	<div id="shapeGroup" style="width:200px">
+			<button type="button" class="btn btn-default  active" shape="pencil"><img src="images/pencil.png" class="shapeImg"/></button>
+			<button type="button" class="btn btn-default" shape="pen"><img src="images/pen.png" class="shapeImg"/></button>
+			<button type="button" class="btn btn-default" shape="rect"><img src="images/rectangle.png" class="shapeImg"/></button>
+			<button type="button" class="btn btn-default" shape="triangle"><img src="images/triangle.png" class="shapeImg"/></button>
+			<button type="button" class="btn btn-default" shape="circle"><img src="images/circle.png" class="shapeImg"/></button>
+			<button type="button" class="btn btn-default" shape="line"><img src="images/line.png" class="shapeImg"/></button>
+			<button type="button" class="btn btn-default" shape="ellipse"><img src="images/ellipse.png" class="shapeImg"/></button>
+	</div>
+</div>
+<!-- minmap-->
+<div id="minmap_content" style="z-index:999;display:none;width:100%;height:100px;position: absolute;left: 0;top: 40px;border: solid 1px;">
+		<div id="rect" style="border: solid 1px red;width: 80px;height: 90px;position: absolute;top: 0px;left: 0px;"></div>
+		<img src="" id="minmapCanvasData">
+</div>
+<!-- 加载完mobile.js后隐藏。 -->
+<div id="empty_div_cover" style="width:99%;height:1900px;background-color:white;position: absolute;left: 0;top: 0;"></div>
 
+	<script src="js/event_function.js"></script>
 	<script src="js/mobile.js"></script>
+	<script type="text/javascript">
+			$('#empty_div_cover').css('height',$(window).height()-43);
+			//之前是白色的。等mobile.js加载好以后改为透明，这样不会显示加载时的一些按钮，美观
+			//$('#empty_div_cover').css('background-color','');
+			//按钮组按钮平均宽度
+			$('#control>[type=button]').css('width',$(window).width()/9);
+
+			$('#empty_div_cover').css('display','none');
+
+
+	</script>
 	<script src="js/shapeDraw.js"></script>
 </body>
 

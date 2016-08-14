@@ -134,6 +134,25 @@ io.on('connection', function(socket) {
             }
         }
     });
+    //minmap位置变化
+    socket.on('rectTouchMove', function(data) {
+        console.log('rectTouchMove');
+        var token = data.token;
+        for (i in pcList) {
+            if (token == pcList[i].token) {
+                pcList[i].socket.emit('rectTouchMove', data);
+            }
+        }
+    });
+    socket.on('rectTouchEnd', function(data) {
+        console.log('rectTouchEnd');
+        var token = data.token;
+        for (i in pcList) {
+            if (token == pcList[i].token) {
+                pcList[i].socket.emit('rectTouchEnd', data);
+            }
+        }
+    });
 });
 //推送移动端端的信息给PC端
 function pushInfoToPc(data, token) {
