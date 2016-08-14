@@ -82,6 +82,8 @@ function init(type) {
     $("#myCanvas").attr("height", a - 43);
     canvasWidth = parseInt($("#myCanvas").attr('width'));
     canvasHeight = parseInt($("#myCanvas").attr('height'));
+    //按钮组按钮平均宽度
+    $('#control>[type=button]').css('width',$(window).width()/9);
     c = document.getElementById("myCanvas");
     //获取一支画笔
     cxt = c.getContext("2d");
@@ -563,14 +565,17 @@ $('#othoer').click(function(){
 });
 //minmap开关
 $('#minmap').click(function(){
-    if ($(this).attr('class').indexOf('recognition-active')!=-1) {
+    minmapClickFunction();
+});
+function minmapClickFunction(){
+    if ($('#minmap').attr('class').indexOf('recognition-active')!=-1) {
         console.log('if');
-        $(this).removeClass('recognition-active');
+      $('#minmap').removeClass('recognition-active');
         $('#minmap_content').css('display','none');
         $('#empty_div_cover').hide();
     }else {
         console.log('else');
-        $(this).addClass('recognition-active');
+        $('#minmap').addClass('recognition-active');
         $('#minmap_content').css('display','block');
         $('#empty_div_cover').show();
         var rectCanvas = document.createElement('canvas');
@@ -588,7 +593,7 @@ $('#minmap').click(function(){
         $('#minmapCanvasData').css('width',canvasWidth);
         $('#minmapCanvasData').css('height',parseInt($('#minmap_content').css('height')));
     }
-});
+}
 $(window).bind('orientationchange', function(e) {
   //  mui.toast("orientationchange事件触发" + getScreenType());
     offset = $("#myCanvasDiv").offset();
@@ -614,9 +619,11 @@ $(window).bind('orientationchange', function(e) {
         }
         lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
         lineWidth = cxt.lineWidth = lineWidth / deviceInfo.scale.x;
-
+        $('#minmap').unbind('click');
+        $('#minmap_content').hide();
     }else if (getScreenType() === 'vertical') {
         lineWidth = cxt.lineWidth = lineWidth * deviceInfo.scale.x;
+        $('#minmap').bind('click',minmapClickFunction);
     }
     drawPenChange();
 });
