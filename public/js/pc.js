@@ -67,7 +67,7 @@ var points = new Array();
 var token;
 var socket = io().connect("http://" + window.location.host);
 socket.on('makecode', function(data) { //监听得到token
-    console.log('makecode');
+    // console.log('makecode');
     token = data;
     $('#qrcode').qrcode({
         text: "http://" + window.location.host + "/client?token=" + token
@@ -76,7 +76,7 @@ socket.on('makecode', function(data) { //监听得到token
 socket.on('linked', function() { //手机端已连接，
     //alert('手机端已连接，应该切换到画板');
     //给到用户提示，撤销二维码
-    console.log('接收到linked事件');
+    // console.log('接收到linked事件');
     $("#myModal").modal("hide");
     //弹窗提醒
     Messenger.options = {
@@ -101,9 +101,7 @@ var rectCanvas;
 var rectEmtpy; //这个画布的空内容数据，用于清空画布用
 socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的屏幕大小数据
     screen = screen.screen;
-    console.log('mobileInfo');
-    //console.log(screen);
-  //  screen.height += 86;
+    // console.log('mobileInfo');
     var long = screen.width>screen.height?screen.width:screen.height;
     var short = screen.width<screen.height?screen.width:screen.height;
     if (screen.viewType === 'vertical') {
@@ -113,7 +111,6 @@ socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的�
         x: canvasWidth / long,
         y: canvasHeight / short
     };
-  //  console.log('mobileinfo计算出来的scale.x:' + deviceInfo.scale.x + '--' + deviceInfo.scale.y);
     socket.emit('pcInfo', {
         token: token,
         pcInfo:{
@@ -143,13 +140,10 @@ socket.on('mobileInfo', function(screen) { //服务端推送过来移动端的�
 socket.on('imgPush', function(data) { //服务器发来图像数据
     var point = data.point;
     point = convertPointforPc(data.shape,deviceInfo,{left:p_left,top:p_top},point);
-    //console.log(point);
     if(data.type!='revoke' && data.type!='recovery' && data.type!='empty'){
-        //console.log('point:' + JSON.stringify(point));
         points.push(point);       //这里是移动端的坐标
     }
     if (data.shape === 'pencil') {
-        //console.log(p_left + '--' + lastPoint.x + '--' + point.x);
         cxt.beginPath();
         cxt.moveTo(lastPoint.x,lastPoint.y);
         cxt.lineTo(point.x, point.y);
@@ -206,9 +200,8 @@ socket.on('imgPush', function(data) { //服务器发来图像数据
         cxt.lineTo(point.x, point.y);
         cxt.stroke();
     } else if (data.type === 'revoke') { //撤销
-        console.log('撤销');
+        // console.log('撤销');
         cxt.clearRect(0,0,canvasWidth,canvasHeight)
-        //var data = historyCanvas[--current];
         current--;
         for(var i=0;i <= current;i++){
             drawShape(cxt,historyCanvas[i]);
@@ -220,7 +213,7 @@ socket.on('imgPush', function(data) { //服务器发来图像数据
         lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
         return;
     } else if (data.type === 'recovery') { //恢复
-        console.log('恢复');
+        // console.log('恢复');
         current++;
         drawShape(cxt,historyCanvas[current]);
         //如果是竖屏就需要推送过去选定区域的数据
@@ -259,8 +252,7 @@ socket.on('drawStart', function(point,shape) {
 });
 //画完一个图形
 socket.on('drawEnd', function(result) {
-    console.log('下面时result:');
-    console.log(result);
+    // console.log('如果是识别模式的识别结果' + result);
     if (result != null) {//识别模式
         cxt.putImageData(lastCanvasData, 0, 0);
         if (result.result === true) {//识别出来啦，没进来就是没识别出来
@@ -296,7 +288,7 @@ socket.on('drawPenChange', function(cxtObj) {
     if (deviceInfo.mobileInfo.screen.viewType === 'cross') {
         lineWidth = cxt.lineWidth = cxtObj.lineWidth * deviceInfo.scale.x;
     }
-    console.log('drawPenChangecxt');
+    // console.log('drawPenChangecxt');
 });
 //移动端断开连接
 socket.on('mobileExit', function() {
@@ -305,12 +297,12 @@ socket.on('mobileExit', function() {
       type: 'string',
       hideAfter: 2
   });
-    console.log('mobileExit');
+    // console.log('mobileExit');
 });
 //一般是横竖屏切换
 socket.on('screenResize', function(data) {
     var screen = data.screen;
-    console.log('screenResize' + "--" + JSON.stringify(screen));
+    // console.log('screenResize' + "--" + JSON.stringify(screen));
     deviceInfo.mobileInfo.screen = screen;
     if (deviceInfo.mobileInfo.screen.viewType === 'cross') {
         lineWidth = cxt.lineWidth = cxt.lineWidth * deviceInfo.scale.x;
@@ -324,7 +316,6 @@ socket.on('screenResize', function(data) {
 //移动端minmap位置变化
 socket.on('rectTouchMove', function(data) {
     var position = data.data;
-    console.log('rectTouchMove' + position.left + '---' + position.top);
     if (position.left >= 0 && position.left <= canvasWidth-rectWidth) { //可以水平移动
           $('#selectRect').css('left', position.left);
           p_left = position.left;
@@ -390,16 +381,13 @@ $('#selectRect').mousedown(function(event) {
     isDown = true;
     pre_x = event.pageX;
     pre_y = event.pageY;
-    //console.log('down');
 });
 $('#selectRect').mouseup(function() {
     isDown = false;
     positionChange();
-    //console.log('up');
 });
 $('#selectRect').mouseout(function() {
     isDown = false;
-    //console.log('out');
 });
 $('#selectRect').mousemove(function(event) {
     if (isDown) {

@@ -74,8 +74,7 @@ function init(type) {
         a = b;
         b = t;
     }
-    console.log("a:" + a + "--b:" + b  );
-    console.log("init----------------");
+    // console.log("init----------------");
     $('#myCanvasDiv').css("width",b);
     $('#myCanvasDiv').css("height",a - 43);
     $("#myCanvas").attr("width", b);
@@ -117,7 +116,6 @@ function eventRebind(shape) {
     $("#myCanvas").unbind();
     //点击画板隐藏所有弹出框
     $("#myCanvas").bind('click', function(e) {
-        console.log('click');
         $('#line_width').popover('hide');
         $('#shape').popover('hide');
         $('#color').popover('hide');
@@ -125,7 +123,6 @@ function eventRebind(shape) {
     //移动端touch事件
     $("#myCanvas").bind('touchstart', function(e) {
         var touches = e.originalEvent.targetTouches;
-        //console.log(touches.length);
         cxt.beginPath();
         var touch = touches[0];
         initX = touch.clientX - offset.left;
@@ -257,7 +254,7 @@ function calcDistance(loc1, loc2) {
 }
 
 function revoke() {
-    console.log('撤销');
+    // console.log('撤销');
     //判断有没有历史画布数据
     if (current < 0) {
         mui.toast('撤销完啦。');
@@ -340,22 +337,19 @@ socket.on('connect', function(sockets) {
 });
 //电脑端选定区域发生改变
 socket.on('positionChange', function(imgData) {
-    console.log('positionChange');
+    // console.log('positionChange');
     var img = new Image();
     img.src = imgData.data;
     //cxt.beginPath();
     img.onload = function() {
         cxt.clearRect(0, 0, canvasWidth, canvasHeight);
-        //console.log(imgData.left + '--' + imgData.top + '--' + imgData.width + '--' + imgData.height);
         cxt.drawImage(img, 0, 0);
         lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
-        //historyCanvas[++current] = (cxt.getImageData(0, 0, canvasWidth, canvasHeight));
     }
 
 });
 //电脑端信息
 socket.on('pcInfo', function(data) {
-    console.log('pcInfo:' + JSON.stringify(data));
     deviceInfo.pcInfo.left = data.pcInfo.left;
     deviceInfo.pcInfo.top = data.pcInfo.top;
     if (data.pcInfo.width!=null) {
@@ -374,18 +368,16 @@ socket.on('pcInfo', function(data) {
     $('#minmap_content').css('top',($(window).height()-43)/2-parseInt($('#minmap_content').css('height'))/2);
 
     if (data.scale != null) {
-        console.log('pcInfo赋值' + JSON.stringify(data));
         deviceInfo.scale = data.scale;
     }
 });
 //显示端断开连接
 socket.on('pcExit', function() {
     mui.toast('显示端断开链接');
-    console.log('pcExit');
+    // console.log('pcExit');
 });
 //图像发生改变，推送图像
 function imageChange(type, data) {
-    //console.log('imageChange');
     if (type == null) {
         pointObj.point = currentPoint;
         socket.emit('imageChange', {
@@ -404,7 +396,7 @@ function imageChange(type, data) {
 }
 //开始画图事件，即手指触摸屏幕以后
 function drawStart(x, y, shape) {
-    console.log('drawStart');
+    // console.log('drawStart');
     socket.emit('drawStart', {
         'point': {
             x: x,
@@ -416,7 +408,7 @@ function drawStart(x, y, shape) {
 }
 //结束画图事件，即手指离开屏幕以后
 function drawEnd(result) {
-    console.log('drawEnd');
+    // console.log('drawEnd');
     socket.emit('drawEnd', {
         'token': token,
         'result':result
@@ -424,7 +416,7 @@ function drawEnd(result) {
 }
 //画布环境发生变化，如颜色，粗细等等
 function drawPenChange() {
-    console.log('drawPenChange');
+    // console.log('drawPenChange');
     lastLineWidth = cxt.lineWidth;
     socket.emit('drawPenChange', {
         'token': token,
@@ -567,25 +559,25 @@ $('#othoer').click(function(){
 $('#minmap').click(function(){
     minmapClickFunction();
 });
+var rectCanvas = document.createElement('canvas');
+//canvas.id = "CursorLayer";
+rectCanvas.width = canvasHeight;
+rectCanvas.height = canvasWidth-43;
+rectCanvas.style.display = 'none';
+var minmapCxt = rectCanvas.getContext('2d');
+minmapCxt.lineCap = "round";
+minmapCxt.lineJoin = "round";
+document.body.appendChild(rectCanvas);
 function minmapClickFunction(){
     if ($('#minmap').attr('class').indexOf('recognition-active')!=-1) {
-        console.log('if');
-      $('#minmap').removeClass('recognition-active');
-        $('#minmap_content').css('display','none');
+        $('#minmap').removeClass('recognition-active');
+        $('#minmap_content').hide();
         $('#empty_div_cover').hide();
     }else {
-        console.log('else');
         $('#minmap').addClass('recognition-active');
         $('#minmap_content').css('display','block');
         $('#empty_div_cover').show();
-        var rectCanvas = document.createElement('canvas');
-        //canvas.id = "CursorLayer";
-        rectCanvas.width = canvasHeight;
-        rectCanvas.height = canvasWidth-43;
-        rectCanvas.style.display = 'none';
-        var minmapCxt = rectCanvas.getContext('2d');
-        document.body.appendChild(rectCanvas);
-        cxt.clearRect(0, 0, rectCanvas.width, rectCanvas.height)
+        minmapCxt.clearRect(0, 0, rectCanvas.width, rectCanvas.height)
         for(var i=0;i<=current;i++){
             drawShape(minmapCxt,historyCanvas[i]);
         }
@@ -604,11 +596,10 @@ $(window).resizeEnd({
 function orientationchangeFunction(){
   //  mui.toast("orientationchange事件触发" + getScreenType());
     offset = $("#myCanvasDiv").offset();
-    console.log('width:' + $(window).width());
     deviceInfo.mobileInfo.screen.viewType = getScreenType();
     //setTimeout('init',500);
-    init();//考虑延迟执行
-    console.log('orientationchange------------');
+    init();
+    // console.log('orientationchange------------');
     socket.emit('screenResize', {
         'token': token,
         'screen': {
@@ -619,7 +610,7 @@ function orientationchangeFunction(){
     });
 
     if (getScreenType() === 'cross') {
-        console.log('resize横屏');
+        // console.log('resize横屏');
         cxt.clearRect(0, 0, canvasWidth, canvasHeight)
         for(var i=0;i<=current;i++){
             drawShape(cxt,historyCanvas[i]);
@@ -711,8 +702,6 @@ $("#rect").bind('touchmove', function(e) {
         if ((x - pre_x < 0 && p_left > 0 ) || (x - pre_x > 0 && p_left < minmapWidth - rectWidth)) { //可以水平移动
             if ( (x - diffLeft) >= 0 && (x - diffLeft) <= minmapWidth-rectWidth) {
                 $('#rect').css('left', x - diffLeft);
-                //console.log('pre_x:' + pre_x + ',pre_y:' + pre_y);
-                //console.log('resultX:' + resultX);
             }
         }
         if ((y - pre_y < 0 && p_top > 0 ) || (y - pre_y > 0 && p_top < minmapHeight - rectHeight-3)) { //可以垂直移动
@@ -722,9 +711,6 @@ $("#rect").bind('touchmove', function(e) {
         }
         var xScale = deviceInfo.pcInfo.width/parseInt($('#minmap_content').css('width'));
         var yScale = deviceInfo.pcInfo.height/parseInt($('#minmap_content').css('height'));
-        console.info(y-diffTop);
-        console.info(yScale);
-        console.log({top:(y-diffTop)*yScale,left:(x - diffLeft)*xScale});
         rectPositionChange({top:(y-diffTop)*yScale,left:(x - diffLeft)*xScale});
         pre_x = x;
         pre_y = y;

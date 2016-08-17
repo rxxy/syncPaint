@@ -46,8 +46,9 @@ function drawShape(cxt,data){
         var y =points[last].y;
         var a =points[last].a;
         var b =points[last].b;
-        var ox =points[last].ox;
-        var oy =points[last].oy;
+        var k = .5522848;
+        var ox =points[last].a * k;
+        var oy =points[last].b * k;
         cxt.beginPath();
         //从椭圆的左端点开始顺时针绘制四条三次贝塞尔曲线
         cxt.moveTo(x - a, y);
@@ -106,8 +107,8 @@ function convertPoint(shape,pcInfo,scale,point){
         var k = .5522848;
         point.x = (point.x + pcInfo.left)/scale.x;
         point.y = (point.y + pcInfo.top)/scale.y;
-        point.a = (point.a + pcInfo.left)/scale.x;
-        point.b = (point.b + pcInfo.top)/scale.y;
+        point.a = point.a / scale.x;
+        point.b = point.b / scale.y;
         point.ox = point.a * k, // 水平控制点偏移量
         point.oy = point.b * k; // 垂直控制点偏移量
     }

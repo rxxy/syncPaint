@@ -1,12 +1,17 @@
 var express = require('express')
 var app = express()
 var url = require('url');
+var ip = require('./IpAddress')();
 //部署
 server = require('http').createServer(app);
+//创建server
+var server = app.listen(80, function() {
+    var host = server.address().address;
+    var port = server.address().port;
+    console.log("同步手绘板运行在 http://%s:%s", ip, port);
+})
 io = require('socket.io').listen(server);
-server.listen(80);
 app.use(express.static('public'));
-console.log('服务部署成功');
 //路由
 app.get('/pc',
     function(req, res) {
@@ -101,18 +106,17 @@ io.on('connection', function(socket) {
     });
     //推送pc的信息给移动端
     socket.on('pcInfo', function(data) {
-        console.log('pcInfo');
+        // console.log('pcInfo');
         var token = data.token;
         for (i in mobileList) {
             if (token == mobileList[i].token) {
-                console.log('pcInfo找到匹配的手机端');
                 mobileList[i].socket.emit('pcInfo', data);
             }
         }
     });
     //客户端断开连接
     socket.on('disconnect', function(){
-      	console.log('receive disconnect event');
+      	// console.log('receive disconnect event');
         for (i in mobileList) {
             if (this == mobileList[i].socket) {
                 console.log('移动端断开链接');
@@ -136,7 +140,7 @@ io.on('connection', function(socket) {
     });
     //minmap位置变化
     socket.on('rectTouchMove', function(data) {
-        console.log('rectTouchMove');
+        //console.log('rectTouchMove');
         var token = data.token;
         for (i in pcList) {
             if (token == pcList[i].token) {
@@ -144,8 +148,9 @@ io.on('connection', function(socket) {
             }
         }
     });
+
     socket.on('rectTouchEnd', function(data) {
-        console.log('rectTouchEnd');
+        // console.log('rectTouchEnd');
         var token = data.token;
         for (i in pcList) {
             if (token == pcList[i].token) {
