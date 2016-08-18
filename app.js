@@ -3,8 +3,6 @@ var app = express()
 var url = require('url');
 var ip = require('./IpAddress')();
 //部署
-server = require('http').createServer(app);
-//创建server
 var server = app.listen(80, function() {
     var host = server.address().address;
     var port = server.address().port;

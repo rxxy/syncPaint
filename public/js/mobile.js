@@ -287,13 +287,20 @@ function recovery() {
 }
 
 function empty() {
-    cxt.clearRect(0, 0, canvasWidth, canvasHeight);
-    lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
+  var btn = ["清空","取消"];
+  mui.confirm('清空画板后将不可撤销！','提示',btn,function(e){
+    if(e.index==0){
+        cxt.clearRect(0, 0, canvasWidth, canvasHeight);
+        lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
         //cxt.putImageData(historyCanvas[0], 0, 0);
-    historyCanvas = new Array();
-    //  historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
-    current = -1;
-    imageChange('empty', {});
+        historyCanvas = new Array();
+        //  historyCanvas.push(cxt.getImageData(0, 0, canvasWidth, canvasHeight));
+        current = -1;
+        imageChange('empty', {});
+
+    }
+  });
+
 }
 
 
@@ -628,6 +635,7 @@ function orientationchangeFunction(){
 
 
 $('#screen_switch').click(function(){
+    minmapClickFunction();
     screenSwitch();
 });
 var screen_switch_flag = true;

@@ -45,16 +45,14 @@
 	<!-- 按钮组 -->
 	<div style="text-align: center;">
  <div class="btn-group" role="group" style="margin: 0 auto;margin-top:5px;display: inline-block;" id="control">
-			<button type="button" class="btn btn-default" id="revoke"><span class="
-	glyphicon glyphicon-chevron-left" aria-hidden="true"></span></button>
-			<button type="button" class="btn btn-default" id="recovery"><span class="
-	glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
+
+			<a type="button" role="button" tabindex="0" class="btn btn-default" id="revoke"><img src="images/undo.png" class="shapeImg"/></a>
+			<a type="button" role="button" tabindex="0" class="btn btn-default" id="recovery"><img src="images/redo.png" class="shapeImg"/></a>
+
 			<button type="button" class="btn btn-default" id="empty"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>
 
 			<!-- 颜色按钮 -->
-			<a type="button" role="button" tabindex="0" class="btn btn-default" id="color" bootstrap_component='popover'>
-					<span class="glyphicon glyphicon-text-color" aria-hidden="true"></span>
-			</a>
+			<a type="button" role="button" tabindex="0" bootstrap_component='popover' class="btn btn-default" id="color"><img src="images/color.png" class="shapeImg"/></a>
 			<!-- 形状按钮 -->
 			<a type="button" role="button" tabindex="0" bootstrap_component='popover' class="btn btn-default" id="shape"><img src="images/pencil.png" class="shapeImg"/></a>
 			<!-- 线宽按钮 -->
@@ -69,7 +67,9 @@
 					<img src="images/location.png" class="shapeImg"/>
 			</a>
 			<!--全屏按钮 -->
-			<button type="button" class="btn btn-default" id="screen_switch"><span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
+			<a type="button" role="button" tabindex="0" class="btn btn-default" id="screen_switch">
+					<img src="images/screen_switch.png" class="shapeImg"/>
+			</a>
 	</div>
 </div>
 <!-- 按钮组结束 -->
