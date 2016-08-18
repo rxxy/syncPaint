@@ -635,7 +635,10 @@ function orientationchangeFunction(){
 
 
 $('#screen_switch').click(function(){
-    minmapClickFunction();
+    //关掉minmap
+    $('#minmap').removeClass('recognition-active');
+    $('#minmap_content').hide();
+    $('#empty_div_cover').hide();
     screenSwitch();
 });
 var screen_switch_flag = true;
