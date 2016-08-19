@@ -69,8 +69,10 @@ var socket = io().connect("http://" + window.location.host);
 socket.on('makecode', function(data) { //监听得到token
     // console.log('makecode');
     token = data;
+    //将网址进行编码
+    var base64Str = BASE64.encoder("http://" + window.location.host + "/client?token=" + token);
     $('#qrcode').qrcode({
-        text: "http://" + window.location.host + "/client?token=" + token
+        text: base64Str
     });
 });
 socket.on('linked', function() { //手机端已连接，

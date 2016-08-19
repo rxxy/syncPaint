@@ -34,6 +34,10 @@ function drawShape(cxt,data){
         cxt.lineTo(points[last].x, points[last].y);
         cxt.stroke();
     }else if (shape === 'pen') {
+        cxt.lineWidth = points[0].lineWidth;
+        cxt.moveTo(startPoint.x,startPoint.y);
+        cxt.lineTo(points[0].x, points[0].y);
+        cxt.stroke();
         for(var i=0;i<points.length-1;i++){
             cxt.beginPath();
             cxt.lineWidth = points[i].lineWidth

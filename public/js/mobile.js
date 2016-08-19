@@ -564,7 +564,11 @@ $('#othoer').click(function(){
 });
 //minmap开关
 $('#minmap').click(function(){
-    minmapClickFunction();
+  if (getScreenType() === 'cross') {
+      mui.toast('横屏状态不能使用');
+      return;
+  }
+  minmapClickFunction();
 });
 var rectCanvas = document.createElement('canvas');
 //canvas.id = "CursorLayer";
@@ -624,11 +628,13 @@ function orientationchangeFunction(){
         }
         lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
         lineWidth = cxt.lineWidth = lineWidth / deviceInfo.scale.x;
-        $('#minmap').unbind('click');
+        //$('#minmap').unbind('click');
+        $('#minmap').removeClass('recognition-active');
         $('#minmap_content').hide();
+        $('#empty_div_cover').hide();
     }else if (getScreenType() === 'vertical') {
         lineWidth = cxt.lineWidth = lineWidth * deviceInfo.scale.x;
-        $('#minmap').bind('click',minmapClickFunction);
+        //$('#minmap').bind('click',minmapClickFunction);
     }
     drawPenChange();
 }
