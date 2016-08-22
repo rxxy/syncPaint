@@ -84,8 +84,8 @@ function convertPoint(shape,pcInfo,scale,point){
     }else if (shape === 'rect') {
         point.left = (point.left + pcInfo.left)/scale.x;
         point.top = (point.top + pcInfo.top)/scale.y;
-        point.x = (point.x + pcInfo.left)/scale.x;
-        point.y = (point.y + pcInfo.top)/scale.y;
+        point.x = (point.x)/scale.x;
+        point.y = (point.y)/scale.y;
     }else if (shape === 'circle') {
         var initx = point.x;
         var inity = point.y;
