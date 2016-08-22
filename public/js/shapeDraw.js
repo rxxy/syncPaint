@@ -1,7 +1,7 @@
 //画点(用来绘制画板历史数据，也就是撤销恢复功能,只在横屏用)
 function drawShape(cxt,data){
     var shape = data.shape;
-    var currentLinewidth = cxt.linewidth;
+    var currentLinewidth = cxt.lineWidth;
     var currentColor = cxt.strokeStyle;
     cxt.lineWidth = data.lineWidth;
     cxt.strokeStyle = data.color;
