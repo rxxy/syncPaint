@@ -3,6 +3,8 @@ window.onload=function(){
         window.scrollTo(0, 1)
     }, 0);
 };
+//初始化mui
+mui.init();
 //调整canvas的大小
 $("#myCanvas").attr("width", $(window).width());
 $("#myCanvas").attr("height", $(window).height() - 43);

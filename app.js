@@ -2,11 +2,13 @@ var express = require('express')
 var app = express()
 var url = require('url');
 var ip = require('./IpAddress')();
+var c = require('child_process');
 //部署
 var server = app.listen(80, function() {
     var host = server.address().address;
     var port = server.address().port;
     console.log("同步手绘板运行在 http://%s:%s", ip, port);
+	c.exec("start http://" + ip + ":" + port + "/pc");
 })
 io = require('socket.io').listen(server);
 app.use(express.static('public'));
