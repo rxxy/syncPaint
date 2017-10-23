@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript" src="js/mui.min.js" ></script>
+		<script type="text/javascript">
+			mui.plusReady(function() {
+				plus.navigator.setFullscreen(true);
+				plus.screen.lockOrientation("portrait-primary");
+				/*判断是否第一次打开*/
+				var first = plus.storage.getItem("IsFrist");
+				if(first){
+					mui.openWindow({
+	      				url:"index.html",
+	      				id:"index",
+	      				show:{
+	      					aniShow:'none'
+	      				},
+	      				waiting:{
+	      					autoShow:false
+	      				}
+	      			});
+				}else{
+	      			mui.openWindow({
+	      				url:"guide.html",
+	      				id:"guide",
+	      				waiting:{
+	      					autoShow:false
+	      				}
+	      			});
+	      	}
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>

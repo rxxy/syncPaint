@@ -1,0 +1,78 @@
+{
+	"index.html": {
+		"resources": [
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"images/boot.jpg",
+			"js/jbase64.js",
+			"images/index.jpg"
+		],
+		"refer": [
+			"barcode_scan.html"
+		]
+	},
+	"barcode_scan.html": {
+		"resources": [
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"js/common.js",
+			"js/jbase64.js"
+		],
+		"refer": [
+			"mobile.html"
+		]
+	},
+	"mobile.html": {
+		"resources": [
+			"images/rectangle.png",
+			"js/jquery.nstSlider.min.js",
+			"js/jquery.min.js",
+			"images/circle.png",
+			"images/line_width.png",
+			"js/mobile.js",
+			"images/line.png",
+			"css/style.css",
+			"js/socket.io-1.2.0.js",
+			"images/pencil.png",
+			"images/ellipse.png",
+			"css/jquery.nstSlider.min.css",
+			"css/bootstrap.css",
+			"js/bootstrap.js",
+			"images/triangle.png",
+			"images/pen.png",
+			"js/mui.min.js",
+			"css/mui.min.css",
+			"js/shapeDraw.js"
+		],
+		"refer": []
+	},
+	"ad.html": {
+		"resources": [
+			"js/mui.min.js",
+			"css/mui.min.css"
+		],
+		"refer": [
+			"guide.html"
+		]
+	},
+	"guide.html": {
+		"refer": [
+			"index.html"
+		],
+		"resources": [
+			"css/mui.min.css",
+			"images/page2.jpg",
+			"images/page1.jpg",
+			"js/mui.min.js"
+		]
+	},
+	"enter.html": {
+		"resources": [
+			"js/mui.min.js"
+		],
+		"refer": [
+			"index.html",
+			"guide.html"
+		]
+	}
+}

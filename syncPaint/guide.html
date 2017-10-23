@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>欢迎页</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<link rel="stylesheet" href="css/mui.min.css">
+		<style type="text/css">
+			#enter {
+				position: absolute;
+				margin-left: 38%;
+				bottom: 20px;
+				background-color: #007AFF;
+				color: white;
+			}
+		</style>
+	</head>
+	
+	<body>
+		<div class="mui-content">
+			<div class="mui-slider">
+				<div class="mui-slider-group">
+					<div class="mui-slider-item">
+						<a href="javascript:;">
+							<img src="images/page1.jpg" id="_d1">
+						</a>
+					</div>
+					<div class="mui-slider-item" id="lastPage">
+						<a href="javascript:;">
+							<img src="images/page2.jpg" id="_d2">
+							<button class="mui-btn" id="enter" type="button" >立即进入</button>
+						</a>
+					</div>
+				</div>
+			</div>
+			<!--<div class="mui-slider-indicator">
+			</div>-->
+		</div>
+		<script src="js/mui.min.js"></script>
+		<script>
+			mui.back = function() {};
+			mui.plusReady(function() {
+				var h = window.innerHeight;
+				document.getElementById("_d1").style.height = h + "px";
+				document.getElementById("_d2").style.height = h + "px";
+				// 我们隐藏下入口页面
+				var self = plus.webview.currentWebview();
+				self.opener().hide("none");
+				/*退出*/
+				var backButtonPress =0;
+				mui.back = function(event){ 
+					backButtonPress++;
+					if(backButtonPress>1){
+						plus.runtime.quit();
+					}else{
+						plus.nativeUI.toast('再按一次退出应用');
+					}
+					setTimeout(function() {
+						backButtonPress = 0;
+					}, 1000);
+					return false;     
+				}
+				//立即体验按钮点击事件
+				document.getElementById("enter").addEventListener('tap', function(event) {
+					plus.storage.setItem("IsFrist", "true");
+					mui.openWindow({
+						url: 'index.html',
+						id: 'index',
+						styles: {
+							popGesture: 'hide'
+						},
+						waiting: {
+							autoShow: true
+						}
+					});
+				});
+			});
+			
+		</script>
+	</body>
+</html>
