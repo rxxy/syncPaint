@@ -336,26 +336,32 @@ function positionChange() {
     //先在小画板画出来
     var img = new Image();
     img.src = c.toDataURL("image/png");
-    var cxt2 = rectCanvas.getContext('2d');
-    cxt2.clearRect(0, 0, rectWidth, rectHeight);
-    //cxt2.putImageData(rectEmtpy,rectWidth,rectHeight);
-    cxt2.beginPath();
-    cxt2.drawImage(img, p_left, p_top, rectWidth, rectHeight, 0, 0, rectWidth, rectHeight);
-    //加载小画板数据，给客户端发过去，节省带宽，速度快
-    var imgData = rectCanvas.toDataURL("image/png");
-    socket.emit('positionChange', {
-        token: token,
-        imgData: {
-            data: imgData
-        }
-    });
-    socket.emit('pcInfo', {
-        token: token,
-        pcInfo:{
-            top: p_top,
-            left: p_left
-        }
-    });
+    img.onload = function(){
+        var cxt2 = rectCanvas.getContext('2d');
+        cxt2.clearRect(0, 0, rectWidth, rectHeight);
+        //cxt2.putImageData(rectEmtpy,rectWidth,rectHeight);
+        cxt2.beginPath();
+        cxt2.drawImage(img, p_left, p_top, rectWidth, rectHeight, 0, 0, rectWidth, rectHeight);
+        //加载小画板数据，给客户端发过去，节省带宽，速度快
+        var imgData = rectCanvas.toDataURL("image/png");
+        
+        socket.emit('positionChange', {
+            token: token,
+            imgData: {
+                data: imgData
+            }
+        });
+        socket.emit('pcInfo', {
+            token: token,
+            pcInfo:{
+                top: p_top,
+                left: p_left
+            }
+        });
+        
+    }
+
+        
 }
 $("#save").click(function() {
     var image = c.toDataURL("image/png").replace("image/png", "image/octet-stream");

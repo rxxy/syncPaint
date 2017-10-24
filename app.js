@@ -90,7 +90,7 @@ io.on('connection', function(socket) {
         var token = data.token;
         for (i in mobileList) {
             if (token == mobileList[i].token) { //找到与手机端匹配的PC端
-                //console.log("img:" + data.imgData);
+                // console.log("img:" + JSON.stringify(data.imgData));
                 mobileList[i].socket.emit('positionChange', data.imgData);
             }
         }

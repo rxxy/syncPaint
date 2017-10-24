@@ -256,7 +256,8 @@ function calcDistance(loc1, loc2) {
 }
 
 function revoke() {
-    // console.log('撤销');
+     console.log('撤销' + current + getScreenType());
+     
     //判断有没有历史画布数据
     if (current < 0) {
         mui.toast('撤销完啦。');
@@ -351,6 +352,7 @@ socket.on('positionChange', function(imgData) {
     img.src = imgData.data;
     //cxt.beginPath();
     img.onload = function() {
+        console.log(img);
         cxt.clearRect(0, 0, canvasWidth, canvasHeight);
         cxt.drawImage(img, 0, 0);
         lastCanvasData = cxt.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -681,6 +683,14 @@ function getScreenType() {
 
 /*退出*/
 mui.back = function(event){
+    // console.log(plus.webview.all())
+    // var array = plus.webview.all();
+    //     if(array){
+    //         for(var i=0,len=array.length;i<len;i++){
+    //                 console.log(JSON.stringify(array[i]));
+    //             }
+    //     }
+    // return true;
     var btn = ["确定","取消"];
     mui.confirm('要退出吗？请记得保存喔','提示',btn,function(e){
       if(e.index==0){
